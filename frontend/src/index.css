@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+  }
+}
+
+@layer components {
+  .message-bubble {
+    @apply rounded-2xl px-4 py-3 max-w-[80%] break-words shadow-sm;
+  }
+  
+  .user-message {
+    @apply bg-primary-600 text-white ml-auto;
+  }
+  
+  .agent-message {
+    @apply bg-white text-gray-800 border border-gray-200;
+  }
+  
+  .typing-indicator span {
+    @apply inline-block w-2 h-2 rounded-full bg-gray-400 animate-pulse;
+    animation-delay: calc(var(--delay) * 0.2s);
+  }
+  
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
