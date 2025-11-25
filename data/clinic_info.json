@@ -1,0 +1,167 @@
+{
+	"clinic_details": {
+		"name": "HealthCare Plus Clinic",
+		"address": "123 Medical Center Dr, Suite 100, New York, NY 10001",
+		"phone": "+1-555-123-4567",
+		"email": "info@healthcareplus.com",
+		"website": "www.healthcareplus.com",
+		"hours_of_operation": {
+			"monday_friday": "9:00 AM - 5:00 PM",
+			"saturday": "10:00 AM - 2:00 PM",
+			"sunday": "Closed"
+		},
+		"location_directions": {
+			"description": "We are located in the heart of downtown, easily accessible by public transportation or car.",
+			"by_subway": "Take the Red Line to Medical Center Station, exit at Main Street. We're a 3-minute walk heading north.",
+			"by_bus": "Routes 15, 22, and 44 stop directly in front of our building.",
+			"by_car": "From I-95, take Exit 23 (Medical District). Turn right on Hospital Avenue, then left on Medical Center Dr."
+		},
+		"parking_information": {
+			"description": "We offer convenient parking options for our patients.",
+			"onsite_parking": "Free parking garage attached to our building. Enter from Medical Center Dr. Parking validation available at reception.",
+			"street_parking": "Metered street parking available on Medical Center Dr and surrounding streets ($2/hour).",
+			"nearby_lots": "Public parking lot on Corner St (2 blocks away) - $5 flat rate."
+		}
+	},
+	"insurance_and_billing": {
+		"accepted_insurance": [
+			"Blue Cross Blue Shield (all plans)",
+			"Aetna",
+			"Cigna",
+			"UnitedHealthcare",
+			"Medicare",
+			"Medicaid",
+			"Humana",
+			"Kaiser Permanente (out of network)",
+			"TriCare"
+		],
+		"insurance_notes": "We are in-network with most major insurance providers. Please bring your insurance card to your appointment. We'll verify your coverage and benefits.",
+		"payment_methods": [
+			"Cash",
+			"Credit Cards (Visa, Mastercard, American Express, Discover)",
+			"Debit Cards",
+			"HSA/FSA Cards",
+			"Personal Checks",
+			"Payment Plans (available for balances over $500)"
+		],
+		"billing_policies": {
+			"copay": "Copays are due at the time of service. Please bring your insurance card.",
+			"self_pay": "Self-pay patients receive a 15% discount when paying in full at time of service.",
+			"balance_billing": "You will receive a statement for any balance after insurance processing. Payment is due within 30 days.",
+			"financial_assistance": "Financial assistance programs available for qualifying patients. Ask our billing department for details."
+		},
+		"cost_estimates": {
+			"general_consultation": "$150-200 (before insurance)",
+			"follow_up": "$75-100 (before insurance)",
+			"physical_exam": "$200-300 (before insurance)",
+			"specialist_consultation": "$250-400 (before insurance)"
+		}
+	},
+	"visit_preparation": {
+		"first_visit": {
+			"arrive_early": "Please arrive 15 minutes early to complete new patient paperwork.",
+			"required_documents": [
+				"Valid photo ID (driver's license or passport)",
+				"Insurance card (front and back)",
+				"List of current medications",
+				"Medical history form (can be downloaded from website)",
+				"Referral letter (if required by insurance)"
+			],
+			"what_to_bring": [
+				"Insurance information",
+				"Payment for copay",
+				"List of current medications and dosages",
+				"List of known allergies",
+				"Previous medical records (if available)",
+				"Questions or concerns you want to discuss"
+			],
+			"forms": "New patient forms can be downloaded from our website and completed at home to save time."
+		},
+		"returning_visit": {
+			"what_to_bring": [
+				"Insurance card (in case of updates)",
+				"Updated medication list",
+				"Any new symptoms or concerns to discuss",
+				"Test results from other providers (if applicable)"
+			]
+		},
+		"special_instructions": {
+			"fasting_bloodwork": "If bloodwork is ordered, you may need to fast for 8-12 hours. We'll inform you if this is necessary.",
+			"physical_exam": "Wear comfortable, loose-fitting clothing. You may need to change into a gown.",
+			"bring_someone": "You're welcome to bring a family member or friend to your appointment."
+		}
+	},
+	"policies": {
+		"cancellation_policy": {
+			"notice_required": "24 hours advance notice",
+			"policy": "We require at least 24 hours notice to cancel or reschedule an appointment. Late cancellations or no-shows may be subject to a $50 fee.",
+			"how_to_cancel": "Call our office at +1-555-123-4567 or use our online patient portal.",
+			"emergency": "We understand emergencies happen. Please call us as soon as possible."
+		},
+		"late_arrival_policy": {
+			"grace_period": "10 minutes",
+			"policy": "We have a 10-minute grace period. If you arrive more than 10 minutes late, we may need to reschedule your appointment to avoid delays for other patients.",
+			"running_late": "If you're running late, please call us immediately. We'll do our best to accommodate you."
+		},
+		"prescription_refills": {
+			"policy": "Allow 48 hours for prescription refill requests. Contact your pharmacy or our office.",
+			"restrictions": "Controlled substances require an office visit and cannot be refilled over the phone."
+		},
+		"test_results": {
+			"timeline": "Most test results are available within 3-5 business days.",
+			"notification": "We'll call you with results. You can also access them through our patient portal."
+		},
+		"covid19_protocols": {
+			"masks": "Masks are optional for vaccinated patients but recommended during flu season (November-March).",
+			"symptoms": "If you have COVID-19 symptoms (fever, cough, loss of taste/smell), please call before coming in. We may recommend telehealth.",
+			"testing": "COVID-19 testing available with or without symptoms. Rapid tests provide results in 15 minutes.",
+			"telehealth": "Telehealth appointments available for many visit types. Ask when scheduling.",
+			"safety_measures": "We follow CDC guidelines including enhanced cleaning, air filtration, and physical distancing in waiting areas."
+		},
+		"minors": {
+			"policy": "Patients under 18 must be accompanied by a parent or legal guardian.",
+			"exceptions": "Teens 16+ may be seen alone for certain confidential services with prior parental consent on file."
+		},
+		"privacy": {
+			"hipaa": "We comply with all HIPAA regulations to protect your privacy.",
+			"records_release": "Medical records can be requested with a signed authorization form. There may be a small copying fee."
+		}
+	},
+	"appointment_types": {
+		"general_consultation": {
+			"duration": "30 minutes",
+			"description": "Standard visit for non-urgent health concerns, illness, or injury. Appropriate for most common conditions.",
+			"examples": "Cold/flu, minor injuries, rashes, infections, chronic condition management"
+		},
+		"follow_up": {
+			"duration": "15 minutes",
+			"description": "Brief appointment to review test results, check progress, or adjust treatment plan.",
+			"examples": "Post-treatment check, medication adjustment, test result review"
+		},
+		"physical_exam": {
+			"duration": "45 minutes",
+			"description": "Comprehensive examination including vital signs, health history review, and preventive care discussion.",
+			"examples": "Annual physical, sports physical, employment physical, school physical"
+		},
+		"specialist_consultation": {
+			"duration": "60 minutes",
+			"description": "In-depth consultation for complex conditions or specialized care needs.",
+			"examples": "Cardiology, dermatology, endocrinology consultations"
+		}
+	},
+	"contact_information": {
+		"appointments": "+1-555-123-4567 (option 1)",
+		"billing": "+1-555-123-4567 (option 2)",
+		"prescriptions": "+1-555-123-4567 (option 3)",
+		"medical_records": "+1-555-123-4567 (option 4)",
+		"after_hours": "+1-555-123-4567 (answering service available 24/7)",
+		"emergency": "Call 911 or go to nearest emergency room"
+	},
+	"additional_services": {
+		"lab_work": "On-site lab for blood work, urinalysis, and other common tests. Most results same-day or next-day.",
+		"immunizations": "All standard vaccines available including flu shots, COVID-19, shingles, and travel vaccines.",
+		"minor_procedures": "We perform minor procedures like wart removal, skin biopsies, and wound care.",
+		"chronic_disease": "Comprehensive management for diabetes, hypertension, asthma, and other chronic conditions.",
+		"preventive_care": "Annual physicals, cancer screenings, and wellness visits."
+	}
+}

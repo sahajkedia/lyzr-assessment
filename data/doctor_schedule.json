@@ -1,0 +1,63 @@
+{
+	"doctor_info": {
+		"name": "Dr. Sarah Johnson",
+		"specialty": "Family Medicine",
+		"credentials": "MD, Board Certified",
+		"bio": "Dr. Johnson has over 15 years of experience in family medicine and is dedicated to providing comprehensive, compassionate care."
+	},
+	"working_hours": {
+		"monday": {
+			"start": "09:00",
+			"end": "17:00",
+			"lunch": { "start": "12:00", "end": "13:00" }
+		},
+		"tuesday": {
+			"start": "09:00",
+			"end": "17:00",
+			"lunch": { "start": "12:00", "end": "13:00" }
+		},
+		"wednesday": {
+			"start": "09:00",
+			"end": "17:00",
+			"lunch": { "start": "12:00", "end": "13:00" }
+		},
+		"thursday": {
+			"start": "09:00",
+			"end": "17:00",
+			"lunch": { "start": "12:00", "end": "13:00" }
+		},
+		"friday": {
+			"start": "09:00",
+			"end": "17:00",
+			"lunch": { "start": "12:00", "end": "13:00" }
+		},
+		"saturday": { "start": "10:00", "end": "14:00", "lunch": null },
+		"sunday": "closed"
+	},
+	"appointment_slot_duration": 15,
+	"buffer_between_appointments": 0,
+	"appointment_types": {
+		"consultation": {
+			"name": "General Consultation",
+			"duration": 30,
+			"slots_required": 2
+		},
+		"followup": {
+			"name": "Follow-up",
+			"duration": 15,
+			"slots_required": 1
+		},
+		"physical": {
+			"name": "Physical Exam",
+			"duration": 45,
+			"slots_required": 3
+		},
+		"specialist": {
+			"name": "Specialist Consultation",
+			"duration": 60,
+			"slots_required": 4
+		}
+	},
+	"blocked_dates": ["2024-12-25", "2024-12-26", "2024-01-01", "2025-01-20"],
+	"existing_appointments": []
+}
