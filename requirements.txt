@@ -1,8 +1,9 @@
 # Core Framework
 fastapi==0.109.0
 uvicorn==0.27.0
-pydantic==2.5.3
-pydantic-settings==2.1.0
+pydantic==2.10.3
+pydantic-settings==2.6.1
+email-validator==2.1.0
 
 # LLM Providers
 openai==1.10.0
@@ -11,6 +12,7 @@ anthropic==0.8.1
 # Vector Database & Embeddings
 chromadb==0.4.22
 sentence-transformers==2.3.1
+numpy<2.0.0
 
 # Utilities
 python-dotenv==1.0.0
