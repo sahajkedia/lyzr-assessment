@@ -62,21 +62,16 @@ async def startup_event():
     initialize_agent(llm_provider=llm_provider, model=llm_model)
     print("   ✅ Agent initialized")
     
-    # Initialize Calendly service
-    print(f"\n📅 Calendly Configuration:")
+    # Initialize Mock Calendly service
+    print(f"\n📅 Mock Calendly Service:")
     from backend.api.calendly_service import calendly_service
-    mode = await calendly_service.initialize()
+    await calendly_service.initialize()
     status = calendly_service.get_status()
     
-    if mode.value == "real":
-        print(f"   ✅ Connected to Calendly API (REAL mode)")
-        print(f"   📋 Event types mapped: {status['event_types_mapped']}")
-    elif mode.value == "fallback":
-        print(f"   ⚠️  Calendly API failed - using FALLBACK mode")
-        print(f"   📋 Local appointments: {status['local_appointments']}")
-    else:
-        print(f"   📋 Using MOCK mode (no API key configured)")
-        print(f"   💡 Set CALENDLY_API_KEY in .env to use real Calendly")
+    print(f"   📋 Mock mode active")
+    print(f"   📊 Total appointments: {status['total_appointments']}")
+    print(f"   ✅ Active appointments: {status['active_appointments']}")
+    print(f"   🏥 Appointment types: {status['appointment_types']}")
     
     port = os.getenv('BACKEND_PORT', 8000)
     print(f"\n🚀 Server running on port {port}")
@@ -111,9 +106,9 @@ async def health():
         "service": "appointment-scheduling-agent",
         "calendly": {
             "mode": calendly_status["mode"],
-            "connected": calendly_status["mode"] == "real",
-            "event_types_mapped": calendly_status["event_types_mapped"],
-            "local_appointments": calendly_status["local_appointments"],
+            "total_appointments": calendly_status["total_appointments"],
+            "active_appointments": calendly_status["active_appointments"],
+            "appointment_types": calendly_status["appointment_types"],
         }
     }
 

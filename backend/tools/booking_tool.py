@@ -33,6 +33,42 @@ async def book_appointment(
         Dictionary with booking confirmation
     """
     try:
+        # Validate patient information - reject placeholder/fake data
+        placeholder_names = ["john doe", "jane doe", "test patient", "patient", "user"]
+        placeholder_emails = ["johndoe@email.com", "test@test.com", "patient@email.com", "email@email.com"]
+        placeholder_phones = ["+15551234567", "555-123-4567", "1234567890", "0000000000"]
+        
+        if patient_name.lower().strip() in placeholder_names:
+            return {
+                "success": False,
+                "error": "Cannot book appointment: Please provide the patient's real full name, not placeholder data."
+            }
+        
+        if patient_email.lower().strip() in placeholder_emails or "@email.com" in patient_email.lower():
+            return {
+                "success": False,
+                "error": "Cannot book appointment: Please provide the patient's real email address, not placeholder data."
+            }
+        
+        if any(placeholder in patient_phone for placeholder in placeholder_phones):
+            return {
+                "success": False,
+                "error": "Cannot book appointment: Please provide the patient's real phone number, not placeholder data."
+            }
+        
+        # Validate minimum length/format
+        if len(patient_name.strip()) < 3:
+            return {
+                "success": False,
+                "error": "Cannot book appointment: Patient name seems too short. Please provide full name."
+            }
+        
+        if "@" not in patient_email or "." not in patient_email:
+            return {
+                "success": False,
+                "error": "Cannot book appointment: Please provide a valid email address."
+            }
+        
         # Create patient info
         patient = PatientInfo(
             name=patient_name,
@@ -249,7 +285,7 @@ BOOKING_TOOLS = [
         "type": "function",
         "function": {
             "name": "book_appointment",
-            "description": "Book an appointment after collecting all required information from the patient. Only use this when you have confirmed all details with the patient.",
+            "description": "Book an appointment ONLY after collecting real patient information (full name, email, phone) and getting explicit confirmation. NEVER use placeholder data like 'John Doe' or 'johndoe@email.com'. You MUST ask the patient for their actual contact information before calling this function.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -268,15 +304,15 @@ BOOKING_TOOLS = [
                     },
                     "patient_name": {
                         "type": "string",
-                        "description": "Patient's full name"
+                        "description": "Patient's REAL full name (first and last). MUST be collected from patient. NEVER use 'John Doe' or placeholder names."
                     },
                     "patient_email": {
                         "type": "string",
-                        "description": "Patient's email address"
+                        "description": "Patient's REAL email address. MUST be collected from patient. NEVER use placeholder emails."
                     },
                     "patient_phone": {
                         "type": "string",
-                        "description": "Patient's phone number"
+                        "description": "Patient's REAL phone number with area code. MUST be collected from patient. NEVER use placeholder numbers."
                     },
                     "reason": {
                         "type": "string",

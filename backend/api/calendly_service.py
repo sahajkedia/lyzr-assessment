@@ -1,8 +1,7 @@
 """
-Unified Calendly Service.
-Uses real Calendly API when configured, falls back to mock implementation.
+Mock Calendly Service.
+Pure mock implementation for appointment scheduling without real Calendly API.
 """
-import os
 import json
 import logging
 from datetime import datetime, timedelta, time as dt_time
@@ -10,59 +9,79 @@ from typing import List, Dict, Any, Optional
 import random
 import string
 from pathlib import Path
-from enum import Enum
 
 from backend.models.schemas import (
     TimeSlot, AvailabilityRequest, AvailabilityResponse,
     BookingRequest, BookingResponse, AppointmentDetails
 )
-from backend.api.calendly_client import CalendlyClient, CalendlyAPIError, calendly_client
 
 logger = logging.getLogger(__name__)
 
 
-class CalendlyMode(Enum):
-    """Operating mode for Calendly service."""
-    REAL = "real"       # Using real Calendly API
-    MOCK = "mock"       # Using mock implementation
-    FALLBACK = "fallback"  # Real API failed, using mock
-
-
 class CalendlyService:
     """
-    Unified Calendly service with real API and mock fallback.
+    Mock Calendly service for appointment scheduling.
     
-    Priority:
-    1. Try real Calendly API if configured
-    2. Fall back to mock if API fails or is not configured
-    3. Sync local appointments with Calendly when possible
+    Uses local JSON files for schedule and appointments.
+    No external API dependencies.
     """
     
     def __init__(self):
-        self.client = calendly_client
-        self.mode = CalendlyMode.MOCK
+        self.mode = "mock"
         self._initialized = False
         
-        # Local storage for mock/fallback
+        # Local storage
         self.data_dir = Path(__file__).parent.parent.parent / "data"
         self.schedule_file = self.data_dir / "doctor_schedule.json"
         self.appointments_file = self.data_dir / "appointments.json"
         
-        # Load schedule for mock mode
+        # Load schedule and appointments
         self.schedule = self._load_schedule()
         self.appointments = self._load_appointments()
-        
-        # Event type mapping (local type -> Calendly event type URI)
-        self._event_type_map: Dict[str, str] = {}
     
     def _load_schedule(self) -> Dict[str, Any]:
         """Load doctor schedule from file."""
         if self.schedule_file.exists():
             with open(self.schedule_file, 'r') as f:
                 return json.load(f)
+        
+        # Default schedule if file doesn't exist
         return {
-            "working_hours": {},
-            "appointment_types": {},
+            "working_hours": {
+                "monday": {"start": "09:00", "end": "17:00", "lunch": {"start": "12:00", "end": "13:00"}},
+                "tuesday": {"start": "09:00", "end": "17:00", "lunch": {"start": "12:00", "end": "13:00"}},
+                "wednesday": {"start": "09:00", "end": "17:00", "lunch": {"start": "12:00", "end": "13:00"}},
+                "thursday": {"start": "09:00", "end": "17:00", "lunch": {"start": "12:00", "end": "13:00"}},
+                "friday": {"start": "09:00", "end": "17:00", "lunch": {"start": "12:00", "end": "13:00"}},
+                "saturday": "closed",
+                "sunday": "closed"
+            },
+            "appointment_types": {
+                "consultation": {
+                    "name": "General Consultation",
+                    "duration": 30,
+                    "slots_required": 1,
+                    "description": "General medical consultation"
+                },
+                "followup": {
+                    "name": "Follow-up",
+                    "duration": 15,
+                    "slots_required": 1,
+                    "description": "Follow-up appointment"
+                },
+                "physical": {
+                    "name": "Physical Exam",
+                    "duration": 45,
+                    "slots_required": 2,
+                    "description": "Complete physical examination"
+                },
+                "specialist": {
+                    "name": "Specialist Consultation",
+                    "duration": 60,
+                    "slots_required": 2,
+                    "description": "Specialist consultation"
+                }
+            },
             "blocked_dates": [],
             "appointment_slot_duration": 30
         }
@@ -80,128 +99,26 @@ class CalendlyService:
         with open(self.appointments_file, 'w') as f:
             json.dump(self.appointments, f, indent=2, default=str)
     
-    async def initialize(self) -> CalendlyMode:
+    async def initialize(self) -> str:
         """
-        Initialize the service and determine operating mode.
+        Initialize the service.
         
         Returns:
-            The mode the service is operating in
+            The mode the service is operating in (always "mock")
         """
-        if self._initialized:
-            return self.mode
+        if not self._initialized:
+            logger.info("📋 Initializing Mock Calendly Service")
+            logger.info(f"   Schedule file: {self.schedule_file}")
+            logger.info(f"   Appointments file: {self.appointments_file}")
+            logger.info(f"   Current appointments: {len(self.appointments)}")
+            self._initialized = True
         
-        # Check if Calendly is configured
-        if self.client.is_configured:
-            logger.info("Calendly API key found, attempting connection...")
-            try:
-                connected = await self.client.verify_connection()
-                if connected:
-                    self.mode = CalendlyMode.REAL
-                    logger.info("✅ Connected to Calendly API - using REAL mode")
-                    
-                    # Map event types
-                    await self._map_event_types()
-                else:
-                    self.mode = CalendlyMode.MOCK
-                    logger.warning("❌ Calendly connection failed - using MOCK mode")
-            except Exception as e:
-                self.mode = CalendlyMode.MOCK
-                logger.error(f"❌ Calendly initialization error: {e} - using MOCK mode")
-        else:
-            self.mode = CalendlyMode.MOCK
-            logger.info("📋 No Calendly API key configured - using MOCK mode")
-        
-        self._initialized = True
         return self.mode
-    
-    async def _map_event_types(self):
-        """Map local appointment types to Calendly event types."""
-        try:
-            event_types = await self.client.get_event_types()
-            
-            local_types = ["consultation", "followup", "physical", "specialist"]
-            
-            for local_type in local_types:
-                for et in event_types:
-                    name = et.get("name", "").lower()
-                    slug = et.get("slug", "").lower()
-                    
-                    if local_type in name or local_type in slug:
-                        self._event_type_map[local_type] = et.get("uri")
-                        logger.info(f"Mapped '{local_type}' -> '{et.get('name')}'")
-                        break
-                
-                # If no match found, use first event type as default
-                if local_type not in self._event_type_map and event_types:
-                    self._event_type_map[local_type] = event_types[0].get("uri")
-            
-            logger.info(f"Event type mapping complete: {len(self._event_type_map)} types mapped")
-            
-        except Exception as e:
-            logger.error(f"Failed to map event types: {e}")
     
     # ==================== Availability ====================
     
     async def get_availability(self, request: AvailabilityRequest) -> AvailabilityResponse:
         """Get available time slots for a specific date and appointment type."""
-        await self.initialize()
-        
-        if self.mode == CalendlyMode.REAL:
-            try:
-                return await self._get_availability_real(request)
-            except CalendlyAPIError as e:
-                logger.warning(f"Calendly API error: {e.message} - falling back to mock")
-                self.mode = CalendlyMode.FALLBACK
-        
-        return await self._get_availability_mock(request)
-    
-    async def _get_availability_real(self, request: AvailabilityRequest) -> AvailabilityResponse:
-        """Get availability from real Calendly API."""
-        date_str = request.date
-        appt_type = request.appointment_type
-        
-        # Get event type URI
-        event_type_uri = self._event_type_map.get(appt_type)
-        if not event_type_uri:
-            raise CalendlyAPIError(f"Event type '{appt_type}' not mapped")
-        
-        # Format date range for API
-        start_time = f"{date_str}T00:00:00Z"
-        end_time = f"{date_str}T23:59:59Z"
-        
-        # Get available times from Calendly
-        available_times = await self.client.get_available_times(
-            event_type_uri=event_type_uri,
-            start_time=start_time,
-            end_time=end_time,
-        )
-        
-        # Convert to our format
-        slots = []
-        for at in available_times:
-            start = datetime.fromisoformat(at.get("start_time", "").replace("Z", "+00:00"))
-            # Calculate end time based on event type duration
-            end_str = at.get("end_time", "")
-            if end_str:
-                end = datetime.fromisoformat(end_str.replace("Z", "+00:00"))
-            else:
-                end = start + timedelta(minutes=30)  # Default 30 min
-            
-            slots.append(TimeSlot(
-                start_time=start.strftime("%H:%M"),
-                end_time=end.strftime("%H:%M"),
-                available=True,
-            ))
-        
-        return AvailabilityResponse(
-            date=date_str,
-            appointment_type=appt_type,
-            available_slots=slots,
-            total_available=len(slots),
-        )
-    
-    async def _get_availability_mock(self, request: AvailabilityRequest) -> AvailabilityResponse:
-        """Get availability from mock implementation."""
         date_str = request.date
         appt_type = request.appointment_type
         
@@ -268,91 +185,6 @@ class CalendlyService:
     
     async def book_appointment(self, request: BookingRequest) -> BookingResponse:
         """Book an appointment."""
-        await self.initialize()
-        
-        if self.mode == CalendlyMode.REAL:
-            try:
-                return await self._book_appointment_real(request)
-            except CalendlyAPIError as e:
-                logger.warning(f"Calendly API error: {e.message} - falling back to mock")
-                self.mode = CalendlyMode.FALLBACK
-        
-        return await self._book_appointment_mock(request)
-    
-    async def _book_appointment_real(self, request: BookingRequest) -> BookingResponse:
-        """Book appointment via real Calendly API."""
-        # Get event type URI
-        event_type_uri = self._event_type_map.get(request.appointment_type)
-        if not event_type_uri:
-            raise CalendlyAPIError(f"Event type '{request.appointment_type}' not mapped")
-        
-        # Format start time for API
-        start_time = self.client.format_datetime_for_api(request.date, request.start_time)
-        
-        # Create the event via Scheduling API
-        result = await self.client.create_scheduled_event(
-            event_type_uri=event_type_uri,
-            start_time=start_time,
-            invitee_email=request.patient.email,
-            invitee_name=request.patient.name,
-            invitee_phone=request.patient.phone,
-            custom_answers=[
-                {"question": "Reason for visit", "answer": request.reason}
-            ],
-        )
-        
-        # Extract event details
-        event_uri = result.get("uri", "")
-        event_uuid = self.client._extract_uuid(event_uri)
-        
-        # Generate our own confirmation code for easy reference
-        confirmation_code = self._generate_confirmation_code()
-        booking_id = f"CAL-{event_uuid[:8].upper()}"
-        
-        # Calculate end time
-        appt_details = self.schedule["appointment_types"].get(
-            request.appointment_type,
-            {"duration": 30}
-        )
-        duration = appt_details.get("duration", 30)
-        end_time = self._add_minutes_to_time(request.start_time, duration)
-        
-        # Create local record for our system
-        appointment = {
-            "booking_id": booking_id,
-            "calendly_event_uri": event_uri,
-            "calendly_event_uuid": event_uuid,
-            "appointment_type": request.appointment_type,
-            "date": request.date,
-            "start_time": request.start_time,
-            "end_time": end_time,
-            "patient": {
-                "name": request.patient.name,
-                "email": request.patient.email,
-                "phone": request.patient.phone,
-            },
-            "reason": request.reason,
-            "confirmation_code": confirmation_code,
-            "status": "confirmed",
-            "source": "calendly",
-            "created_at": datetime.now().isoformat(),
-        }
-        
-        # Save locally as well
-        self.appointments.append(appointment)
-        self._save_appointments()
-        
-        logger.info(f"✅ Appointment booked via Calendly: {booking_id}")
-        
-        return BookingResponse(
-            booking_id=booking_id,
-            status="confirmed",
-            confirmation_code=confirmation_code,
-            details=appointment,
-        )
-    
-    async def _book_appointment_mock(self, request: BookingRequest) -> BookingResponse:
-        """Book appointment via mock implementation."""
         date_str = request.date
         start_time = request.start_time
         appt_type = request.appointment_type
@@ -400,7 +232,7 @@ class CalendlyService:
         self.appointments.append(appointment)
         self._save_appointments()
         
-        logger.info(f"📋 Appointment booked via mock: {booking_id}")
+        logger.info(f"📋 Appointment booked (mock): {booking_id}")
         
         return BookingResponse(
             booking_id=booking_id,
@@ -419,22 +251,9 @@ class CalendlyService:
         return None
     
     async def cancel_appointment(self, booking_id: str, reason: str = None) -> bool:
-        """Cancel an appointment."""
-        await self.initialize()
-        
+        """Cancel an appointment (marks as cancelled but keeps in database)."""
         for i, appt in enumerate(self.appointments):
             if appt["booking_id"] == booking_id:
-                # If it's a Calendly appointment, cancel via API
-                if self.mode == CalendlyMode.REAL and appt.get("calendly_event_uuid"):
-                    try:
-                        await self.client.cancel_scheduled_event(
-                            event_uuid=appt["calendly_event_uuid"],
-                            reason=reason,
-                        )
-                        logger.info(f"✅ Cancelled via Calendly: {booking_id}")
-                    except CalendlyAPIError as e:
-                        logger.warning(f"Calendly cancel failed: {e.message} - updating local only")
-                
                 # Update local record
                 self.appointments[i]["status"] = "cancelled"
                 self.appointments[i]["cancelled_at"] = datetime.now().isoformat()
@@ -442,6 +261,19 @@ class CalendlyService:
                     self.appointments[i]["cancellation_reason"] = reason
                 
                 self._save_appointments()
+                logger.info(f"📋 Appointment cancelled (mock): {booking_id}")
+                return True
+        
+        return False
+    
+    async def delete_appointment(self, booking_id: str) -> bool:
+        """Permanently delete an appointment from the database."""
+        for i, appt in enumerate(self.appointments):
+            if appt["booking_id"] == booking_id:
+                # Permanently remove from list
+                self.appointments.pop(i)
+                self._save_appointments()
+                logger.info(f"🗑️ Appointment permanently deleted (mock): {booking_id}")
                 return True
         
         return False
@@ -455,13 +287,17 @@ class CalendlyService:
         available_dates = []
         current_date = datetime.now().date()
         
-        for i in range(num_days):
-            check_date = current_date + timedelta(days=i)
+        days_checked = 0
+        days_with_availability = 0
+        
+        while days_with_availability < num_days and days_checked < 60:  # Check up to 60 days
+            check_date = current_date + timedelta(days=days_checked)
             date_str = check_date.strftime("%Y-%m-%d")
             
             # Skip weekends if not in schedule
             day_name = check_date.strftime("%A").lower()
             if self.schedule["working_hours"].get(day_name) == "closed":
+                days_checked += 1
                 continue
             
             # Get availability
@@ -471,7 +307,7 @@ class CalendlyService:
             if availability.total_available > 0:
                 slots = [
                     {"start_time": slot.start_time, "end_time": slot.end_time}
-                    for slot in availability.available_slots[:3]
+                    for slot in availability.available_slots[:3]  # First 3 slots
                 ]
                 available_dates.append({
                     "date": date_str,
@@ -479,6 +315,9 @@ class CalendlyService:
                     "total_slots": availability.total_available,
                     "sample_slots": slots,
                 })
+                days_with_availability += 1
+            
+            days_checked += 1
         
         return available_dates
     
@@ -575,14 +414,13 @@ class CalendlyService:
     def get_status(self) -> Dict[str, Any]:
         """Get current service status."""
         return {
-            "mode": self.mode.value,
-            "calendly_configured": self.client.is_configured,
-            "event_types_mapped": len(self._event_type_map),
-            "local_appointments": len(self.appointments),
+            "mode": self.mode,
             "initialized": self._initialized,
+            "total_appointments": len(self.appointments),
+            "active_appointments": len([a for a in self.appointments if a.get("status") == "confirmed"]),
+            "appointment_types": len(self.schedule.get("appointment_types", {})),
         }
 
 
 # Global instance
 calendly_service = CalendlyService()
-

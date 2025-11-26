@@ -60,10 +60,12 @@ async def chat(request: ChatRequest) -> ChatResponse:
             ChatMessage(role="assistant", content=result["response"])
         ]
         
-        # Save to session
+        # Save to session (only user and assistant messages with role and content)
+        # Note: Tool calls and tool messages are internal to the agent and should NOT be persisted
         session["conversation_history"] = [
             {"role": msg.role, "content": msg.content}
             for msg in updated_history
+            if msg.role in ["user", "assistant"]  # Filter out any system/tool messages
         ]
         
         # Return response

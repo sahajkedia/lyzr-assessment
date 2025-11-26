@@ -30,11 +30,16 @@ function AppointmentManager({ isOpen, onClose, onSendMessage }) {
   }
 
   const handleCancel = async (bookingId) => {
+    setError(null)
     try {
       const result = await chatAPI.cancelAppointment(bookingId)
       if (result.success) {
         // Update the appointment to show cancelled status
-        setAppointment({ ...appointment, status: 'cancelled' })
+        setAppointment({ 
+          ...appointment, 
+          status: 'cancelled',
+          cancelled_at: result.cancelled_at || new Date().toISOString()
+        })
         
         // Optionally notify via chat
         if (onSendMessage) {
@@ -45,6 +50,8 @@ function AppointmentManager({ isOpen, onClose, onSendMessage }) {
       }
     } catch (err) {
       setError(err.message || 'Failed to cancel appointment.')
+      // Re-throw the error so AppointmentCard can also handle it
+      throw err
     }
   }
 

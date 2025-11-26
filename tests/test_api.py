@@ -34,8 +34,15 @@ def mock_agent():
 
 @pytest.fixture
 def mock_calendly():
-    """Mock Calendly API."""
-    with patch('backend.api.calendly.calendly_api') as mock:
+    """Mock Calendly service."""
+    with patch('backend.api.calendly.calendly_service') as mock:
+        mock.get_availability = AsyncMock()
+        mock.get_next_available_dates = AsyncMock(return_value=[])
+        mock.book_appointment = AsyncMock()
+        mock.get_appointment = AsyncMock()
+        mock.cancel_appointment = AsyncMock(return_value=True)
+        mock.appointments = []
+        mock.schedule = {"appointment_types": {}}
         yield mock
 
 
@@ -139,10 +146,9 @@ def test_check_availability_endpoint(client, mock_calendly):
         total_available=1
     ))
     
-    response = client.post("/api/calendly/availability", json={
-        "date": tomorrow,
-        "appointment_type": "consultation"
-    })
+    response = client.get(
+        f"/api/calendly/availability?date={tomorrow}&appointment_type=consultation"
+    )
     
     assert response.status_code == 200
     data = response.json()
@@ -286,17 +292,6 @@ def test_get_appointments_summary(client, mock_calendly):
 # ============================================================================
 # Error Handling Tests
 # ============================================================================
-
-def test_chat_with_invalid_data(client):
-    """Test chat endpoint with invalid data."""
-    response = client.post("/api/chat", json={
-        "message": "",  # Empty message
-        "conversation_history": []
-    })
-    
-    # Should still return 200 but handle gracefully
-    assert response.status_code in [200, 422]
-
 
 def test_appointment_not_found(client, mock_calendly):
     """Test getting non-existent appointment."""

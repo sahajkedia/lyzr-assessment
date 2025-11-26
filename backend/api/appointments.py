@@ -121,18 +121,27 @@ async def get_appointment_by_confirmation(confirmation_code: str) -> Dict[str, A
 
 
 @router.delete("/appointments/{booking_id}")
-async def cancel_appointment(booking_id: str) -> Dict[str, Any]:
+async def delete_appointment(booking_id: str, 
+                            permanent: bool = Query(False, description="Permanently delete instead of just cancelling")) -> Dict[str, Any]:
     """
-    Cancel an appointment.
+    Delete or cancel an appointment.
     
     Args:
-        booking_id: The booking ID to cancel
+        booking_id: The booking ID to delete/cancel
+        permanent: If True, permanently removes the appointment. If False (default), just cancels it.
         
     Returns:
-        Cancellation confirmation
+        Deletion/cancellation confirmation
     """
     try:
-        success = await calendly_service.cancel_appointment(booking_id)
+        if permanent:
+            # Permanently remove the appointment
+            success = await calendly_service.delete_appointment(booking_id)
+            message = "Appointment permanently deleted"
+        else:
+            # Just cancel it (keeps in database)
+            success = await calendly_service.cancel_appointment(booking_id)
+            message = "Appointment cancelled successfully"
         
         if not success:
             raise HTTPException(
@@ -142,8 +151,9 @@ async def cancel_appointment(booking_id: str) -> Dict[str, Any]:
         
         return {
             "success": True,
-            "message": "Appointment cancelled successfully",
-            "booking_id": booking_id
+            "message": message,
+            "booking_id": booking_id,
+            "permanent": permanent
         }
     
     except HTTPException:
@@ -164,8 +174,8 @@ async def get_appointments_summary() -> Dict[str, Any]:
         appointments = calendly_service.appointments
         
         # Count by status
-        status_counts = {}
-        type_counts = {}
+        status_counts: Dict[str, int] = {}
+        type_counts: Dict[str, int] = {}
         upcoming_count = 0
         past_count = 0
         today = datetime.now().date()

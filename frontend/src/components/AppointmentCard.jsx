@@ -4,6 +4,7 @@ import { useState } from 'react'
 function AppointmentCard({ appointment, onCancel, onReschedule }) {
   const [isLoading, setIsLoading] = useState(false)
   const [showConfirmCancel, setShowConfirmCancel] = useState(false)
+  const [error, setError] = useState(null)
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr)
@@ -46,11 +47,13 @@ function AppointmentCard({ appointment, onCancel, onReschedule }) {
 
   const handleCancel = async () => {
     setIsLoading(true)
+    setError(null)
     try {
       await onCancel(appointment.booking_id)
       setShowConfirmCancel(false)
     } catch (error) {
       console.error('Failed to cancel:', error)
+      setError(error.message || 'Failed to cancel appointment. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -192,6 +195,19 @@ function AppointmentCard({ appointment, onCancel, onReschedule }) {
                 No, Keep It
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="pt-3 border-t border-gray-100 bg-red-50 border border-red-200 rounded-lg p-3 animate-slide-up">
+            <p className="text-sm text-red-800">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+            >
+              Dismiss
+            </button>
           </div>
         )}
 

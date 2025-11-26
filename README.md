@@ -2,62 +2,38 @@
 
 An intelligent conversational AI agent that helps patients schedule medical appointments through natural conversation, while seamlessly answering frequently asked questions using RAG (Retrieval Augmented Generation).
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Setup Instructions](#setup-instructions)
-- [System Design](#system-design)
-- [Scheduling Logic](#scheduling-logic)
-- [Testing](#testing)
-- [API Documentation](#api-documentation)
-- [Project Structure](#project-structure)
-
----
-
 ## Overview
 
 This project implements a complete medical appointment scheduling system with:
 
-- **Natural Conversation Flow**: Warm, empathetic dialogue that feels human
+- **Natural Conversation Flow**: Warm, empathetic dialogue that understands patient needs
 - **Intelligent Scheduling**: Smart appointment booking with real-time availability checking
-- **RAG-Powered FAQ System**: Accurate answers using clinic knowledge base
-- **Seamless Context Switching**: Smoothly handles FAQ questions during booking
-- **Multi-Appointment Types**: Supports 4 appointment types with different durations
+- **RAG-Powered FAQ System**: Accurate answers from clinic knowledge base with no hallucinations
+- **Seamless Context Switching**: Smoothly transitions between FAQ and scheduling contexts
+- **Multi-Appointment Types**: Supports consultation (30min), follow-up (15min), physical exam (45min), specialist (60min)
 - **Edge Case Handling**: Gracefully manages ambiguous inputs, conflicts, and errors
 - **Full-Stack Implementation**: React frontend with FastAPI backend
 
-### Appointment Types
-
-| Type                    | Duration | Use Case                                               |
-| ----------------------- | -------- | ------------------------------------------------------ |
-| General Consultation    | 30 min   | Common health concerns, illness, injuries              |
-| Follow-up               | 15 min   | Review results, check progress, medication adjustments |
-| Physical Exam           | 45 min   | Annual physicals, comprehensive examinations           |
-| Specialist Consultation | 60 min   | Complex conditions, specialized care                   |
-
----
-
 ## Tech Stack
 
-### Backend
-- **Framework**: FastAPI (Python 3.10+)
-- **LLM**: OpenAI GPT-4 Turbo / Anthropic Claude 3 Sonnet
-- **Vector Database**: ChromaDB (persistent)
-- **Embeddings**: Sentence Transformers (all-MiniLM-L6-v2)
-- **Calendar API**: Mock Calendly API with real API integration support
+**Backend:**
 
-### Frontend
-- **Framework**: React 18 with Hooks
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **HTTP Client**: Axios
-- **Icons**: Lucide React
+- FastAPI (Python 3.10+)
+- LLM: OpenAI GPT-4 Turbo / Anthropic Claude 3 Sonnet
+- Vector Database: ChromaDB (persistent)
+- Embeddings: Sentence Transformers (all-MiniLM-L6-v2)
+- Calendar API: Mock Calendly Implementation
 
-### Testing
-- **Framework**: Pytest with pytest-asyncio
-- **Mocking**: unittest.mock
-- **Coverage**: 70+ tests, fully mocked (no external dependencies required)
+**Frontend:**
+
+- React 18 with Vite
+- Tailwind CSS
+- Axios for API calls
+
+**Testing:**
+
+- Pytest with pytest-asyncio
+- 70+ tests, fully mocked (no external dependencies)
 
 ---
 
@@ -68,45 +44,38 @@ This project implements a complete medical appointment scheduling system with:
 - Python 3.10 or higher
 - Node.js 16+ and npm (for frontend)
 - OpenAI API key or Anthropic API key
-- Git
 
-### Installation Steps
+### Installation
 
-#### 1. Clone the Repository
+#### 1. Clone and Install Dependencies
 
 ```bash
 git clone <repository-url>
 cd lyzr-assessment-1
-```
 
-#### 2. Backend Setup
-
-**Create and activate virtual environment:**
-
-```bash
+# Backend setup
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-**Install dependencies:**
-
-```bash
 pip install -r requirements.txt
+
+# Frontend setup (optional)
+cd frontend
+npm install
+cd ..
 ```
 
-#### 3. Environment Configuration
+#### 2. Environment Variables
 
-**Copy the example environment file:**
+Copy `.env.example` to `.env` and configure:
 
 ```bash
 cp .env.example .env
 ```
 
-**Edit `.env` and configure:**
+**Required Configuration:**
 
-**For OpenAI (GPT-4):**
 ```env
-# LLM Configuration
+# LLM Configuration (REQUIRED)
 LLM_PROVIDER=openai
 LLM_MODEL=gpt-4-turbo
 OPENAI_API_KEY=your_api_key_here
@@ -125,51 +94,36 @@ BACKEND_PORT=8000
 FRONTEND_PORT=3000
 ```
 
-**For Anthropic (Claude):**
+**For Anthropic Claude instead of OpenAI:**
+
 ```env
 LLM_PROVIDER=anthropic
 LLM_MODEL=claude-3-sonnet-20240229
-ANTHROPIC_API_KEY=your_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
 ```
 
-#### 4. Calendly API Setup (Optional)
+#### 3. Calendly API Setup (Optional)
 
-The system works with both mock and real Calendly API:
+**This system uses a Mock Calendly implementation by default** - no API key required.
 
-**Mock Mode (No API Key Required):**
-- System automatically uses local JSON storage
-- Fully functional for testing and demos
-- No external dependencies
+The mock implementation:
 
-**Real Calendly Mode:**
+- Stores appointments locally in `data/appointments.json`
+- Uses doctor schedule from `data/doctor_schedule.json`
+- Provides full booking, rescheduling, and cancellation support
+- Works completely offline
 
-1. Sign up for a free Calendly account at https://calendly.com
-2. Get your Personal Access Token from https://calendly.com/integrations/api_webhooks
-3. Add to your `.env`:
-```env
-CALENDLY_API_KEY=your_personal_access_token_here
-```
-4. Create event types in Calendly:
-   - General Consultation (30 min)
-   - Follow-up (15 min)
-   - Physical Exam (45 min)
-   - Specialist Consultation (60 min)
+If you want to use **Real Calendly API** instead:
 
-The system automatically detects if Calendly is configured and switches modes accordingly.
+1. Sign up at https://calendly.com
+2. Get API token from https://calendly.com/integrations/api_webhooks
+3. Add to `.env`:
+   ```env
+   CALENDLY_API_KEY=your_calendly_api_key
+   CALENDLY_USER_URL=https://calendly.com/your-username
+   ```
 
-#### 5. Frontend Setup (Optional)
-
-```bash
-cd frontend
-npm install
-```
-
-#### 6. Initialize Knowledge Base
-
-The FAQ knowledge base will be automatically initialized on first run:
-- Loads clinic information from `data/clinic_info.json`
-- Generates embeddings using Sentence Transformers
-- Stores in ChromaDB vector database at `data/vectordb/`
+The system will automatically use real Calendly if configured, otherwise falls back to mock.
 
 ### Running the Application
 
@@ -180,14 +134,14 @@ The FAQ knowledge base will be automatically initialized on first run:
 ```
 
 This starts:
-- Backend API on `http://localhost:8000`
-- Frontend UI on `http://localhost:3000`
 
-#### Option 2: Start Backend Only
+- Backend API on http://localhost:8000
+- Frontend UI on http://localhost:3000
+
+#### Option 2: Backend Only
 
 ```bash
-cd backend
-python main.py
+python backend/main.py
 ```
 
 Or using uvicorn:
@@ -196,295 +150,199 @@ Or using uvicorn:
 uvicorn backend.main:app --reload --port 8000
 ```
 
-**Access API documentation:**
+Access API documentation at:
+
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
-#### Option 3: Start Frontend Only
+#### Option 3: Interactive CLI
 
-```bash
-cd frontend
-npm run dev
-```
-
-Opens at `http://localhost:3000`
-
-### Testing the System
-
-**1. Web UI (Recommended):**
-```
-Open http://localhost:3000
-```
-
-**2. Interactive CLI:**
 ```bash
 python run.py
 ```
 
-**3. API Directly:**
+### Testing
+
+Run the test suite:
+
 ```bash
-curl -X POST "http://localhost:8000/api/chat" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "I need to schedule an appointment",
-    "conversation_history": []
-  }'
+# Run all tests
+pytest
+
+# Run with verbose output
+pytest -v
+
+# Run specific test file
+pytest tests/test_agent.py -v
 ```
 
-**4. Run Test Suite:**
-```bash
-pytest tests/ -v
-```
+All tests are fully mocked - no API keys or external services needed.
 
 ---
 
 ## System Design
-
-### Architecture Overview
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│                         User/Patient                            │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      FastAPI Backend                             │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │               Chat Endpoint (/api/chat)                   │  │
-│  └───────────────────────┬───────────────────────────────────┘  │
-└─────────────────────────┼──────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Scheduling Agent                              │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │              LLM (GPT-4 / Claude)                        │   │
-│  │         - Conversation Management                         │   │
-│  │         - Intent Understanding                            │   │
-│  │         - Tool Selection                                  │   │
-│  └──────────────────┬──────────────┬────────────────────────┘   │
-└─────────────────────┼──────────────┼─────────────────────────────┘
-                      │              │
-          ┌───────────┴──┐      ┌────┴──────────┐
-          │              │      │                │
-          ▼              ▼      ▼                ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────────┐
-│   FAQ RAG    │  │ Availability │  │ Booking Tool     │
-│              │  │    Tool      │  │                  │
-│ ┌──────────┐ │  │              │  │ - Book Appt     │
-│ │ Vector   │ │  │ - Check      │  │ - Cancel Appt   │
-│ │ Store    │ │  │   Slots      │  │ - Reschedule    │
-│ │(ChromaDB)│ │  │ - Get Next   │  │                  │
-│ └──────────┘ │  │   Available  │  │                  │
-│              │  │              │  │                  │
-│ ┌──────────┐ │  └──────┬───────┘  └────────┬─────────┘
-│ │Embeddings│ │         │                   │
-│ │ Model    │ │         │                   │
-│ └──────────┘ │         ▼                   ▼
-└──────┬───────┘  ┌─────────────────────────────────┐
-       │          │   Calendly API (Mock/Real)       │
-       │          │                                   │
-       │          │  - Working Hours Management      │
-       │          │  - Slot Calculation              │
-       │          │  - Conflict Detection            │
-       │          │  - Appointment Storage           │
-       │          └─────────────────────────────────┘
-       │
-       ▼
-┌────────────────────────────────────────┐
-│      Clinic Knowledge Base              │
-│  - Clinic Details (location, hours)    │
-│  - Insurance & Billing                 │
-│  - Visit Preparation                   │
-│  - Policies (cancellation, COVID)      │
-└─────────────────────────────────────────┘
-```
 
 ### Agent Conversation Flow
 
 The agent follows a three-phase conversation flow:
 
 ```
-User Message
-    │
-    ▼
-Intent Detection
-    │
-    ├─── FAQ Question? ───► RAG System ───► Generate Answer ───► Response
-    │                          │
-    │                          └─► Return to Scheduling Context (if applicable)
-    │
-    └─── Scheduling Request
-            │
-            ▼
-        Phase Detection
-            │
-            ├─── Phase 1: Understanding Needs
-            │       ├─► Determine appointment type
-            │       └─► Get date/time preferences
-            │
-            ├─── Phase 2: Slot Recommendation
-            │       ├─► Call Availability Tool
-            │       ├─► Present 3-5 slots
-            │       └─► Handle selection/rejection
-            │
-            └─── Phase 3: Booking Confirmation
-                    ├─► Collect patient info
-                    ├─► Confirm all details
-                    ├─► Call Booking Tool
-                    └─► Provide confirmation
+┌─────────────────────────────────────────────────────────┐
+│ PHASE 1: Understanding Needs                            │
+│ • Greet patient warmly                                  │
+│ • Understand reason for visit                           │
+│ • Determine appropriate appointment type                │
+│ • Ask about date/time preferences                       │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│ PHASE 2: Slot Recommendation                            │
+│ • Call availability tool                                │
+│ • Show 3-5 available slots based on preferences         │
+│ • Explain why slots are suggested                       │
+│ • Handle "none of these work" gracefully                │
+│ • Offer alternative dates/times                         │
+└─────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│ PHASE 3: Booking Confirmation                           │
+│ • Collect patient information (name, email, phone)      │
+│ • Confirm all details before booking                    │
+│ • Call booking tool                                     │
+│ • Provide confirmation details                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Context Switching:** The agent can seamlessly switch between scheduling and FAQ answering:
+
+```
+User: "I want to book an appointment"
+Agent: "What brings you in today?"
+User: "What insurance do you accept?"  ← FAQ interruption
+Agent: [Retrieves from knowledge base]
+       "We accept Blue Cross, Aetna, Cigna..."
+       "Now, what brings you in today?"  ← Resumes scheduling
 ```
 
 ### Calendly Integration Approach
 
-The system uses a **unified Calendly service** with automatic fallback:
+**Mock Implementation (Default):**
 
-**Operating Modes:**
+The system uses a pure local implementation:
 
-| Mode | Description |
-|------|-------------|
-| `REAL` | Connected to Calendly API - all bookings sync with your Calendly account |
-| `MOCK` | No API key configured - uses local JSON storage |
-| `FALLBACK` | API failed - automatically falls back to mock for uninterrupted service |
+1. **Doctor Schedule** (`data/doctor_schedule.json`):
 
-**Integration Features:**
-- Automatic mode detection
-- Real-time availability fetching
-- Event type mapping
-- Graceful fallback on API failures
-- Local backup of all appointments
+   - Working hours per day (e.g., 9:00 AM - 5:00 PM)
+   - Lunch breaks
+   - Blocked dates (holidays)
+
+2. **Slot Calculation:**
+
+   - Generate 15-minute intervals within working hours
+   - Exclude lunch breaks
+   - Check against existing appointments
+   - Match appointment duration requirements
+
+3. **Appointment Storage** (`data/appointments.json`):
+
+   - JSON file stores all bookings
+   - Includes booking ID, confirmation code, patient info
+   - Checked for conflicts before booking
+
+4. **Endpoints Provided:**
+   - `GET /api/calendly/availability` - Check specific date
+   - `GET /api/calendly/availability/next-dates` - Get upcoming availability
+   - `POST /api/calendly/book` - Create appointment
+   - `POST /api/calendly/reschedule` - Move appointment
+   - `POST /api/calendly/cancel` - Cancel appointment
+
+**Real Calendly Integration (Optional):**
+
+If Calendly API key is provided in `.env`, the system uses:
+
+- `GET /event_types` - Get appointment types
+- `GET /event_types/{uuid}/available_times` - Get availability
+- `POST /scheduled_events` - Create booking
+
+The system automatically falls back to mock if real API fails.
 
 ### RAG Pipeline for FAQs
 
-#### 1. Knowledge Base Structure
+**Knowledge Base:**
 
-The clinic knowledge base (`data/clinic_info.json`) contains structured information about:
-- **Clinic Details**: Location, hours, parking, directions
-- **Insurance & Billing**: Accepted providers, payment methods, costs
-- **Visit Preparation**: Required documents, what to bring
-- **Policies**: Cancellation, late arrival, COVID-19 protocols
-- **Appointment Types**: Descriptions and use cases
+Clinic information stored in `data/clinic_info.json`:
 
-#### 2. RAG Process Flow
+- Clinic details (location, hours, parking, directions)
+- Insurance & billing (accepted providers, payment methods)
+- Visit preparation (documents to bring, first visit procedures)
+- Policies (cancellation, late arrival, COVID-19 protocols)
 
-```
-User Question: "What insurance do you accept?"
-    │
-    ▼
-┌─────────────────────────────────────────────┐
-│  Step 1: Query Processing                   │
-│  ├─ Receive user question                   │
-│  └─ Generate query embedding                │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│  Step 2: Semantic Search                    │
-│  ├─ Query vector store (ChromaDB)           │
-│  ├─ Find top-K similar documents            │
-│  └─ Return with similarity scores           │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│  Step 3: Context Compilation                │
-│  ├─ Extract relevant information            │
-│  ├─ Format as context                       │
-│  └─ Add to LLM prompt                       │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-              ┌─────────────────┐
-              │   LLM Generates │
-              │  Natural Answer │
-              └─────────────────┘
-```
+**RAG Process:**
 
-**Technical Details:**
-- **Embedding Model**: all-MiniLM-L6-v2 (384 dimensions)
-- **Vector Database**: ChromaDB with persistent storage
-- **Retrieval Method**: Cosine similarity search
-- **Top-K Results**: 3-5 most relevant documents
-- **Context Window**: Provides retrieved context to LLM for accurate answers
+1. **Embedding Generation:**
 
-#### 3. Context Switching Mechanism
+   - Uses Sentence Transformers (all-MiniLM-L6-v2)
+   - 384-dimensional embeddings
+   - Generated once at startup, stored in ChromaDB
 
-The agent seamlessly switches between scheduling and FAQ:
+2. **Query Processing:**
+
+   - User question embedded using same model
+   - Semantic search in vector store
+   - Top 3-5 most relevant documents retrieved
+
+3. **Answer Generation:**
+
+   - Retrieved context provided to LLM
+   - LLM generates natural language answer
+   - Grounded in knowledge base (no hallucinations)
+
+4. **Context Retention:**
+   - Conversation history maintained
+   - Can return to scheduling after FAQ
+   - Handles multiple FAQs in sequence
+
+**Example:**
 
 ```
-User: "I want to book an appointment"
-Agent: "I'd be happy to help! What brings you in?"
-
-User: "What insurance do you accept?"  ← FAQ during scheduling
-Agent: [Answers using RAG]
-       "We accept Blue Cross, Aetna, Cigna..."
-       [Returns to scheduling]
-       "Now, what brings you in today?"
-
-User: "I have Blue Cross, I need a checkup"  ← Back to scheduling
-Agent: [Continues scheduling flow]
+User: "What insurance do you accept?"
+    ↓
+Semantic Search: Find insurance-related docs
+    ↓
+Retrieved: "Accepted insurance providers include..."
+    ↓
+LLM: "We accept Blue Cross Blue Shield, Aetna, Cigna,
+      UnitedHealthcare, and Medicare..."
 ```
-
-**Implementation:**
-- Maintains conversation history throughout
-- Detects FAQ intent via LLM analysis
-- Pauses scheduling phase
-- Queries RAG system
-- Provides FAQ answer
-- Resumes scheduling from previous phase
 
 ### Tool Calling Strategy
 
-The system uses **native function calling** (OpenAI) and **tool use** (Anthropic), not ReAct prompting.
+The system uses **native LLM function calling** (not ReAct prompting):
 
 **Available Tools:**
 
-1. **`check_availability`**
-   ```python
-   check_availability(date: str, appointment_type: str) -> dict
-   ```
+1. **`check_availability(date, appointment_type)`**
+
    - Checks specific date for available slots
    - Returns list of time slots with availability status
 
-2. **`get_next_available_slots`**
-   ```python
-   get_next_available_slots(appointment_type: str, num_days: int = 7) -> dict
-   ```
+2. **`get_next_available_slots(appointment_type, num_days=7)`**
+
    - Gets upcoming availability across multiple days
    - Returns dates with sample available slots
 
-3. **`book_appointment`**
-   ```python
-   book_appointment(
-       appointment_type: str,
-       date: str,
-       start_time: str,
-       patient_name: str,
-       patient_email: str,
-       patient_phone: str,
-       reason: str
-   ) -> dict
-   ```
+3. **`book_appointment(appointment_type, date, start_time, patient_name, patient_email, patient_phone, reason)`**
+
    - Books appointment after confirmation
    - Validates slot availability
    - Generates booking ID and confirmation code
 
-4. **`cancel_appointment`**
-   ```python
-   cancel_appointment(booking_id: str) -> dict
-   ```
+4. **`cancel_appointment(booking_id)`**
+
    - Cancels existing appointment
    - Updates appointment status
 
-5. **`reschedule_appointment`**
-   ```python
-   reschedule_appointment(
-       booking_id: str,
-       new_date: str,
-       new_start_time: str
-   ) -> dict
-   ```
+5. **`reschedule_appointment(booking_id, new_date, new_start_time)`**
    - Moves appointment to new date/time
    - Preserves booking ID and confirmation code
 
@@ -492,33 +350,28 @@ The system uses **native function calling** (OpenAI) and **tool use** (Anthropic
 
 ```
 User: "I need an appointment tomorrow afternoon"
-    │
-    ▼
-LLM analyzes: needs appointment_type, has date/time preference
-    │
-    ▼
-LLM asks: "What brings you in today?"
-    │
-    ▼
+    ↓
+LLM: Needs appointment_type, has date/time preference
+    ↓
+LLM: Asks "What brings you in today?"
+    ↓
 User: "Headaches"
-    │
-    ▼
-LLM decides: Call get_next_available_slots(
-    appointment_type="consultation",
-    num_days=1
-)
-    │
-    ▼
-Tool returns: Available afternoon slots
-    │
-    ▼
-LLM generates: "I have these afternoon slots..."
+    ↓
+LLM: Calls get_next_available_slots(
+        appointment_type="consultation",
+        num_days=1
+     )
+    ↓
+Tool: Returns afternoon slots for tomorrow
+    ↓
+LLM: "I have these afternoon slots: 2:00 PM, 3:30 PM..."
 ```
 
-**Benefits:**
-- More reliable than ReAct prompting
+**Benefits over ReAct:**
+
+- More reliable tool execution
 - Automatic parameter validation
-- Better handling of multi-step processes
+- Better multi-step reasoning
 - Native error handling
 
 ---
@@ -527,95 +380,97 @@ LLM generates: "I have these afternoon slots..."
 
 ### How Available Slots Are Determined
 
-The system uses a sophisticated slot calculation algorithm:
-
 #### 1. Load Doctor's Schedule
+
+From `data/doctor_schedule.json`:
 
 ```json
 {
   "working_hours": {
-    "monday": { "start": "09:00", "end": "17:00" },
-    "tuesday": { "start": "09:00", "end": "17:00" },
+    "monday": {"start": "09:00", "end": "17:00"},
+    "tuesday": {"start": "09:00", "end": "17:00"},
     ...
   },
-  "lunch_break": { "start": "12:00", "end": "13:00" },
+  "lunch_break": {"start": "12:00", "end": "13:00"},
   "blocked_dates": ["2024-12-25", "2024-01-01"]
 }
 ```
 
 #### 2. Validate Date
 
-- ✅ Not in the past
-- ✅ Not a weekend (unless configured)
-- ✅ Not a blocked date (holidays)
-- ✅ Within working hours
+Check that requested date:
+
+- ✓ Is not in the past
+- ✓ Is not a weekend (unless configured)
+- ✓ Is not a blocked date (holidays)
+- ✓ Is within working hours
 
 #### 3. Generate Time Slots
 
-- Creates 15-minute intervals from opening to closing
-- Excludes lunch break periods
-- Example: 9:00, 9:15, 9:30, 9:45, 10:00...
+- Create 15-minute intervals from opening to closing
+- Exclude lunch break periods
+- Example: 9:00, 9:15, 9:30, 9:45, 10:00, 10:15...
 
 #### 4. Check Existing Appointments
 
 ```python
-# Load existing appointments from data/appointments.json
-existing_appointments = load_appointments()
-
-# Filter for the requested date
-date_appointments = filter_by_date(existing_appointments, target_date)
+# Load appointments from data/appointments.json
+existing_appointments = load_appointments_for_date(target_date)
 
 # Mark slots as unavailable if they conflict
-for appointment in date_appointments:
-    mark_slots_unavailable(appointment.start_time, appointment.duration)
+for appointment in existing_appointments:
+    mark_slots_unavailable(
+        appointment.start_time,
+        appointment.duration
+    )
 ```
 
-#### 5. Match Appointment Type Duration
+#### 5. Match Appointment Duration
 
-Each appointment type requires contiguous available slots:
+Find contiguous available slots matching appointment type:
 
-| Type | Duration | Slots Required |
-|------|----------|----------------|
-| Follow-up | 15 min | 1 slot |
-| Consultation | 30 min | 2 consecutive slots |
-| Physical | 45 min | 3 consecutive slots |
-| Specialist | 60 min | 4 consecutive slots |
+| Type                    | Duration | Slots Needed        |
+| ----------------------- | -------- | ------------------- |
+| Follow-up               | 15 min   | 1 slot              |
+| General Consultation    | 30 min   | 2 consecutive slots |
+| Physical Exam           | 45 min   | 3 consecutive slots |
+| Specialist Consultation | 60 min   | 4 consecutive slots |
 
 **Algorithm:**
+
 ```python
 def find_available_slots(date, appointment_type):
-    slots_needed = get_slots_for_type(appointment_type)  # e.g., 2 for consultation
+    slots_needed = get_slots_for_type(appointment_type)
     all_slots = generate_15min_slots(date)
-    
+
     available_blocks = []
     for i in range(len(all_slots) - slots_needed + 1):
         block = all_slots[i:i + slots_needed]
         if all(slot.available for slot in block):
-            available_blocks.append({
-                "start_time": block[0].time,
-                "end_time": block[-1].time + duration,
-                "available": True
-            })
-    
+            available_blocks.append(block[0].start_time)
+
     return available_blocks
 ```
 
 ### Appointment Type Handling
 
-**Type Determination Logic:**
+**Type Determination:**
+
+The LLM determines appropriate appointment type based on patient's reason:
 
 ```
-User Reason → Recommended Type
-────────────────────────────────
-"Headache", "Cold", "Flu" → General Consultation
-"Follow up on blood pressure" → Follow-up
-"Annual physical", "Checkup" → Physical Exam
-"Cardiology", "Complex issue" → Specialist Consultation
+Reason                          → Recommended Type
+─────────────────────────────────────────────────────
+"Headache", "Cold", "Flu"       → General Consultation (30 min)
+"Follow up on test results"     → Follow-up (15 min)
+"Annual physical", "Checkup"    → Physical Exam (45 min)
+"Heart specialist", "Complex"   → Specialist Consultation (60 min)
 ```
 
 **Duration Enforcement:**
-- System ensures requested slot has sufficient consecutive availability
-- Automatically blocks out the full duration when booking
+
+- System ensures slot has sufficient consecutive availability
+- Automatically blocks out full duration when booking
 - Prevents overlapping appointments
 
 ### Conflict Prevention
@@ -623,12 +478,11 @@ User Reason → Recommended Type
 #### 1. Real-time Availability Checking
 
 ```python
-# Always check before booking
 def book_appointment(slot_info):
-    # Double-check availability
+    # Double-check availability before booking
     if not is_slot_still_available(slot_info.date, slot_info.time):
         raise ConflictError("Slot no longer available")
-    
+
     # Proceed with booking
     create_appointment(slot_info)
 ```
@@ -638,47 +492,29 @@ def book_appointment(slot_info):
 - Read appointment file
 - Check for conflicts
 - Write new appointment
-- All in a single operation (would use database transactions in production)
+- All in single operation (would use database transactions in production)
 
-#### 3. Concurrent Booking Protection
-
-**Current (Development):**
-- In-memory file locking
-- Single server instance
-
-**Production Ready:**
-- Use database row-level locking
-- Implement optimistic locking with version numbers
-- Use Redis for distributed locking
-
-#### 4. Buffer Time Handling
-
-Optional buffer time between appointments:
-
-```python
-BUFFER_MINUTES = 0  # Configurable
-
-def calculate_end_time(start_time, duration):
-    return start_time + duration + BUFFER_MINUTES
-```
-
-#### 5. Validation Layers
+#### 3. Validation Layers
 
 ```
 User Request
-    │
-    ▼
+    ↓
 Frontend Validation (basic checks)
-    │
-    ▼
+    ↓
 API Validation (Pydantic schemas)
-    │
-    ▼
-Business Logic Validation (slot availability)
-    │
-    ▼
-Database Validation (unique constraints)
+    ↓
+Business Logic (slot availability check)
+    ↓
+Data Layer (consistency checks)
 ```
+
+#### 4. Edge Cases Handled
+
+- **Date in past**: Politely corrects, suggests future dates
+- **Outside business hours**: Explains hours, suggests alternatives
+- **Slot taken during booking**: Detects conflict, offers alternatives
+- **No consecutive slots**: Finds next available block
+- **Weekend booking**: Suggests weekday alternatives
 
 ---
 
@@ -686,13 +522,14 @@ Database Validation (unique constraints)
 
 ### Test Suite Overview
 
-The project includes 70+ comprehensive tests, all **fully mocked** (no external dependencies required).
+The project includes 70+ comprehensive tests covering all aspects:
 
-**Test Files:**
-- `tests/test_agent_mocked.py` - Agent conversation tests (15+ tests)
-- `tests/test_tools.py` - Tool function tests (18+ tests)
-- `tests/test_api.py` - API endpoint tests (20+ tests)
-- `tests/test_models.py` - Schema validation tests (22 tests)
+- `tests/test_agent.py` - Agent conversation tests
+- `tests/test_tools.py` - Tool function tests
+- `tests/test_api.py` - API endpoint tests
+- `tests/test_models.py` - Schema validation tests
+
+All tests are **fully mocked** - no external API calls or services required.
 
 ### Running Tests
 
@@ -704,242 +541,175 @@ pytest
 pytest -v
 
 # Run specific test file
-pytest tests/test_agent_mocked.py -v
+pytest tests/test_agent.py -v
 
 # Run specific test
-pytest tests/test_agent_mocked.py::test_greeting_response -v
+pytest tests/test_agent.py::test_greeting -v
 ```
-
-### Test Coverage
-
-**What's Tested:**
-
-✅ **Conversational Quality:**
-- Natural greeting responses
-- Context awareness
-- Empathetic tone
-- Smooth topic transitions
-
-✅ **RAG System:**
-- FAQ retrieval accuracy
-- Semantic search
-- Context switching
-- No hallucinations
-
-✅ **Scheduling Intelligence:**
-- Appointment type determination
-- Slot recommendations
-- Preference understanding
-- Booking validation
-
-✅ **Edge Cases:**
-- No available slots
-- Past dates
-- Invalid inputs
-- API failures
-- User changes mind
-- Ambiguous time references
 
 ### Example Conversations
 
-See `tests/example_conversations.md` for 10+ detailed conversation examples demonstrating:
-
 #### 1. Successful Booking
+
 ```
 User: I need to see the doctor
-Agent: I'd be happy to help! What brings you in today?
+
+Agent: I'd be happy to help you schedule an appointment! What's the main
+reason for your visit today?
+
 User: I've been having headaches
-Agent: I recommend a General Consultation (30 minutes)...
-[Complete booking flow]
+
+Agent: I understand. For persistent headaches, I'd recommend a general
+consultation (30 minutes) where the doctor can assess your symptoms. Does
+that sound appropriate?
+
+User: Yes, that works
+
+Agent: Perfect. When would you like to come in? Do you have a preference
+for morning or afternoon appointments?
+
+User: Afternoon if possible, sometime this week
+
+Agent: Let me check our afternoon availability this week. I have these
+options:
+- Tomorrow (Nov 27) at 2:00 PM
+- Wednesday (Nov 28) at 3:30 PM
+- Thursday (Nov 29) at 1:00 PM
+
+Which works best for you?
+
+User: Wednesday at 3:30
+
+Agent: Excellent! Wednesday, November 28th at 3:30 PM for a 30-minute
+consultation. Before I confirm, I'll need:
+- Your full name?
+- Best phone number to reach you?
+- Email address for confirmation?
+
+User: John Doe, 555-123-4567, john@example.com
+
+Agent: Perfect! I've confirmed your appointment for Wednesday, November
+28th at 3:30 PM. You'll receive a confirmation email at john@example.com.
+Your confirmation code is ABC123.
+
+Is there anything else you'd like to know about your visit?
 ```
 
 #### 2. FAQ During Booking (Context Switching)
+
 ```
 User: I want to book an appointment
-Agent: What brings you in?
-User: What insurance do you accept?  ← Context switch
-Agent: [Answers from knowledge base]
-User: I have Blue Cross, I need a checkup  ← Back to scheduling
-Agent: [Continues scheduling]
+
+Agent: I'd be happy to help! What brings you in today?
+
+User: Actually, first - what insurance do you accept?
+
+Agent: Great question! We accept most major insurance providers including
+Blue Cross Blue Shield, Aetna, Cigna, UnitedHealthcare, and Medicare. We
+also accept self-pay patients. Do you have insurance with one of these
+providers?
+
+User: Yes, I have Blue Cross. I'd like to schedule a checkup
+
+Agent: Perfect, we accept Blue Cross Blue Shield. For a checkup, I'd
+recommend our Physical Exam (45 minutes) which includes a comprehensive
+examination. Would you like to proceed with that?
+
+[Continues with scheduling...]
 ```
 
 #### 3. No Available Slots
+
 ```
 User: Can I see the doctor today?
-Agent: Unfortunately, we don't have availability today.
-       However, I have these options for tomorrow:
-       - 9:00 AM
-       - 11:30 AM
-       - 2:00 PM
-       Would any of these work?
+
+Agent: I understand you'd like to be seen today. Unfortunately, we don't
+have any available appointments for today. However, I have several options
+for tomorrow:
+- 9:00 AM
+- 11:30 AM
+- 2:00 PM
+
+Would any of these work? If you need urgent care, I can also provide
+information about our walk-in clinic hours.
+
+User: Is there a waitlist for today?
+
+Agent: We don't have a formal waitlist, but I'd recommend calling our
+office at (555) 123-4567 as they sometimes have last-minute cancellations.
+For planned appointments, would you like me to book you for tomorrow?
 ```
 
 #### 4. Ambiguous Time References
+
 ```
 User: I need an appointment tomorrow morning
-Agent: [Shows morning slots: 9:00 AM, 10:30 AM]
+
+Agent: I can help with that! I have these morning slots available:
+- 9:00 AM
+- 10:30 AM
+- 11:00 AM
+
+Which time works best for you?
+
 User: Around 10
+
 Agent: Just to clarify, would you prefer the 10:30 AM slot?
+
+User: Yes, 10:30 works
+
+Agent: Great! Let me confirm...
 ```
 
 #### 5. User Changes Mind
+
 ```
 User: I need a physical exam
-Agent: [Shows availability]
-User: Actually, I just need a quick follow-up
-Agent: No problem! A follow-up is 15 minutes...
+
+Agent: I can schedule a Physical Exam (45 minutes) for you. When would
+you like to come in?
+
+User: Actually, I just need a quick follow-up on my blood pressure
+
+Agent: No problem! A follow-up appointment (15 minutes) is perfect for
+that. This gives you time to check in with the doctor about your blood
+pressure. When would you like to come in?
+
+[Continues with new appointment type...]
 ```
 
 ### Edge Cases Covered
 
-**Date/Time Issues:**
-- Past dates → Politely corrects, suggests future dates
-- Invalid dates → Validates and requests correction
-- Outside business hours → Explains hours, suggests alternatives
-- "Tomorrow morning" → Clarifies specific times
-- "Around 3" → Confirms AM or PM
+#### Date/Time Issues
 
-**Availability Issues:**
-- No slots available → Offers alternative dates, provides phone number
-- All afternoon slots booked → Suggests mornings or next day
-- Slot taken during booking → Detects conflict, offers alternatives
+- ✓ Past dates - Politely corrects, suggests future
+- ✓ Invalid dates - Validates and requests correction
+- ✓ Outside business hours - Explains hours, suggests alternatives
+- ✓ "Tomorrow morning" - Clarifies specific times
+- ✓ "Around 3" - Confirms AM or PM
+- ✓ Weekend requests - Suggests weekday alternatives
 
-**API Failures:**
-- Calendly unavailable → Fallback to mock mode
-- Network timeout → Retry logic with clear communication
-- Invalid API key → Graceful degradation with phone number
+#### Availability Issues
 
-**User Behavior:**
-- Changes mind mid-booking → Gracefully restarts
-- Asks multiple FAQs → Answers all, maintains context
-- Provides incomplete information → Politely asks for missing details
-- Ambiguous responses → Seeks clarification
+- ✓ No slots available - Offers alternative dates, provides phone number
+- ✓ All afternoon slots booked - Suggests mornings or next day
+- ✓ Slot taken during booking - Detects conflict, offers alternatives
+- ✓ Only partial time available - Finds complete blocks
 
-**System Errors:**
-- Invalid appointment type → Suggests valid types
-- Malformed input → Validates and requests correction
-- Session expires → Maintains conversation history
+#### User Behavior
 
----
+- ✓ Changes mind mid-booking - Gracefully restarts
+- ✓ Asks multiple FAQs - Answers all, maintains context
+- ✓ Provides incomplete information - Politely asks for missing details
+- ✓ Ambiguous responses - Seeks clarification
+- ✓ Interrupts booking with FAQ - Switches context, returns to booking
 
-## API Documentation
+#### System Errors
 
-### Main Endpoints
-
-#### POST /api/chat
-
-Main conversational endpoint.
-
-**Request:**
-```json
-{
-  "message": "I need to schedule an appointment",
-  "conversation_history": [
-    {"role": "user", "content": "Previous message"},
-    {"role": "assistant", "content": "Previous response"}
-  ],
-  "session_id": "optional-session-id"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "I'd be happy to help you schedule an appointment!",
-  "conversation_history": [...],
-  "session_id": "generated-or-provided-session-id",
-  "metadata": {
-    "iterations": 1,
-    "used_tools": false,
-    "tool_calls": []
-  }
-}
-```
-
-#### GET /api/calendly/status
-
-Check Calendly connection status.
-
-**Response:**
-```json
-{
-  "success": true,
-  "status": {
-    "mode": "real",
-    "calendly_configured": true,
-    "event_types_mapped": 4,
-    "local_appointments": 5,
-    "initialized": true
-  }
-}
-```
-
-#### POST /api/calendly/availability
-
-Check slot availability for specific date.
-
-**Request:**
-```json
-{
-  "date": "2024-12-15",
-  "appointment_type": "consultation"
-}
-```
-
-**Response:**
-```json
-{
-  "date": "2024-12-15",
-  "available_slots": [
-    {"start_time": "09:00", "end_time": "09:30", "available": true},
-    {"start_time": "09:30", "end_time": "10:00", "available": false},
-    ...
-  ]
-}
-```
-
-#### POST /api/calendly/book
-
-Book an appointment.
-
-**Request:**
-```json
-{
-  "appointment_type": "consultation",
-  "date": "2024-12-15",
-  "start_time": "10:00",
-  "patient": {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "phone": "+1-555-0100"
-  },
-  "reason": "Annual checkup"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "booking_id": "APPT-2024-001",
-  "confirmation_code": "ABC123",
-  "status": "confirmed",
-  "details": {
-    "appointment_type": "consultation",
-    "date": "2024-12-15",
-    "start_time": "10:00",
-    "end_time": "10:30"
-  }
-}
-```
-
-#### GET /health
-
-Health check endpoint.
-
-**Interactive Documentation:**
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- ✓ Invalid appointment type - Suggests valid types
+- ✓ Malformed input - Validates and requests correction
+- ✓ API failures - Fallback mechanisms with clear communication
+- ✓ Network timeout - Retry logic with user notification
 
 ---
 
@@ -948,201 +718,69 @@ Health check endpoint.
 ```
 lyzr-assessment-1/
 ├── README.md                          # This file
+├── architecture_diagram.png           # System architecture visual
 ├── .env.example                       # Environment template
 ├── requirements.txt                   # Python dependencies
-├── pytest.ini                         # Test configuration
 ├── start.sh                           # Convenience startup script
 │
 ├── backend/
-│   ├── main.py                        # FastAPI application entry point
-│   │
+│   ├── main.py                        # FastAPI application entry
 │   ├── agent/
-│   │   ├── scheduling_agent.py        # Main agent logic with LLM integration
-│   │   └── prompts.py                 # System prompts for agent
-│   │
+│   │   ├── scheduling_agent.py        # Main agent with LLM integration
+│   │   └── prompts.py                 # System prompts
 │   ├── api/
 │   │   ├── chat.py                    # Chat endpoints
-│   │   ├── calendly.py                # Calendly API endpoints
-│   │   ├── calendly_client.py         # Real Calendly API client
 │   │   ├── calendly_integration.py    # Mock Calendly implementation
-│   │   ├── calendly_service.py        # Unified service with fallback
-│   │   └── appointments.py            # Appointments management
-│   │
+│   │   ├── calendly_service.py        # Calendly service layer
+│   │   └── calendly.py                # Calendly API router
 │   ├── rag/
 │   │   ├── faq_rag.py                 # RAG system for FAQs
 │   │   ├── embeddings.py              # Embedding model wrapper
 │   │   └── vector_store.py            # ChromaDB wrapper
-│   │
 │   ├── tools/
-│   │   ├── availability_tool.py       # Availability checking functions
+│   │   ├── availability_tool.py       # Availability checking
 │   │   └── booking_tool.py            # Booking operations
-│   │
 │   └── models/
 │       └── schemas.py                 # Pydantic models
 │
-├── frontend/
-│   ├── package.json                   # Frontend dependencies
-│   ├── vite.config.js                 # Vite configuration
-│   ├── tailwind.config.js             # Tailwind CSS config
-│   │
-│   └── src/
-│       ├── App.jsx                    # Main app component
-│       ├── main.jsx                   # Entry point
-│       ├── index.css                  # Global styles
-│       │
-│       ├── components/
-│       │   ├── ChatInterface.jsx      # Main chat container
-│       │   ├── MessageList.jsx        # Message display
-│       │   ├── MessageInput.jsx       # User input
-│       │   ├── AppointmentCard.jsx    # Appointment display
-│       │   ├── AppointmentManager.jsx # Appointment management
-│       │   └── ConfirmationPage.jsx   # Booking confirmation
-│       │
-│       └── api/
-│           └── chatApi.js             # API client
+├── frontend/                          # React application
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── components/
+│   │   │   ├── ChatInterface.jsx
+│   │   │   └── AppointmentConfirmation.jsx
+│   │   └── api/
+│   │       └── chatApi.js
+│   └── package.json
 │
 ├── data/
 │   ├── clinic_info.json               # FAQ knowledge base
-│   ├── doctor_schedule.json           # Doctor's working hours
+│   ├── doctor_schedule.json           # Doctor working hours
 │   ├── appointments.json              # Booked appointments
-│   └── vectordb/                      # ChromaDB storage (auto-generated)
+│   └── vectordb/                      # ChromaDB storage
 │
 └── tests/
-    ├── README.md                      # Testing guide
-    ├── conftest.py                    # Pytest configuration and fixtures
-    ├── test_agent_mocked.py           # Agent tests (mocked)
+    ├── test_agent.py                  # Agent tests
     ├── test_tools.py                  # Tool tests
     ├── test_api.py                    # API tests
-    ├── test_models.py                 # Schema tests
-    └── example_conversations.md       # Example dialogues
+    └── test_models.py                 # Schema tests
 ```
 
 ---
 
-## Key Features
+## API Documentation
 
-### ✅ Natural Conversation
-- Warm, empathetic dialogue
-- Context-aware responses
-- Smooth topic transitions
-- Professional medical tone
+**Interactive Documentation:**
 
-### ✅ Intelligent Scheduling
-- Understands date/time preferences
-- Smart slot recommendations
-- Multiple appointment types
-- Real-time availability
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-### ✅ RAG-Powered FAQ
-- Semantic search in knowledge base
-- Accurate, grounded answers
-- No hallucinations
-- Context switching capability
+**Key Endpoints:**
 
-### ✅ Edge Case Handling
-- Graceful error recovery
-- Ambiguous input clarification
-- No availability alternatives
-- API failure fallbacks
-
-### ✅ Production Ready
-- Comprehensive test suite
-- Error handling
-- Input validation
-- Security considerations
-
----
-
-## Performance
-
-- **First Request**: 5-10 seconds (model loading)
-- **Subsequent Requests**: 1-3 seconds
-- **FAQ Lookup**: ~500ms
-- **Tool Calls**: ~1-2 seconds
-- **Test Suite Execution**: < 10 seconds
-
----
-
-## Security & Privacy
-
-**Current Implementation:**
-- Environment variables for sensitive data
-- Input validation on all endpoints
-- CORS configuration
-- No patient data in logs
-
-**Production Requirements:**
-- HIPAA compliance measures
-- Data encryption at rest and in transit
-- Audit logging
-- Authentication & authorization
-- Rate limiting
-- Security headers
-- Regular security audits
-
----
-
-## Development Notes
-
-- **LLM Provider**: Easily switch between OpenAI and Anthropic
-- **Calendly Mode**: Works with or without real API
-- **Session Management**: In-memory (use Redis in production)
-- **Database**: JSON files (use PostgreSQL in production)
-- **Deployment**: Ready for Docker/Kubernetes
-
----
-
-## Future Enhancements
-
-- [ ] SMS/email notifications
-- [ ] Multi-language support
-- [ ] Voice interface
-- [ ] Calendar sync (Google/Outlook)
-- [ ] Admin dashboard
-- [ ] Analytics & reporting
-- [ ] Recurring appointments
-- [ ] Waitlist functionality
-
----
-
-## Troubleshooting
-
-### Backend won't start
-- Check Python version: `python --version` (need 3.10+)
-- Verify API key in `.env`
-- Check port 8000 is available
-- Review logs for errors
-
-### Frontend won't start
-- Check Node version: `node --version` (need 16+)
-- Run `npm install` in frontend directory
-- Check port 3000 is available
-
-### Tests failing
-- Activate virtual environment
-- Install test dependencies: `pip install pytest pytest-asyncio`
-- Run from project root
-
-### ChromaDB errors
-- Delete `data/vectordb/` folder
-- Restart backend (will rebuild automatically)
-
-### API key errors
-- Verify key is correct in `.env`
-- No quotes around key value
-- Check key has proper permissions
-
----
-
-## Author
-
-**Assessment Submission** for Lyzr AI
-
-- Framework: FastAPI
-- LLM: OpenAI GPT-4 Turbo / Anthropic Claude 3 Sonnet
-- Vector DB: ChromaDB
-- Embeddings: Sentence Transformers (all-MiniLM-L6-v2)
-- Frontend: React + Vite + Tailwind CSS
+- `POST /api/chat` - Main conversation endpoint
+- `GET /api/calendly/availability` - Check slot availability
+- `POST /api/calendly/book` - Book appointment
+- `GET /api/health` - Health check
 
 ---
 
@@ -1152,15 +790,4 @@ This project is created for the Lyzr AI Assessment.
 
 ---
 
-## Acknowledgments
-
-- OpenAI for GPT-4 API
-- Anthropic for Claude API
-- ChromaDB for vector storage
-- Sentence Transformers for embeddings
-- FastAPI for the backend framework
-- React and Vite for the frontend
-
----
-
-**For questions or support, please refer to the test examples in `tests/example_conversations.md` or check the API documentation at `http://localhost:8000/docs`**
+**For more detailed examples, see `tests/example_conversations.md`**

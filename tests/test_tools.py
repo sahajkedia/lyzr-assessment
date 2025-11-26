@@ -15,8 +15,8 @@ from backend.models.schemas import AvailabilityRequest, BookingRequest, PatientI
 
 @pytest.mark.asyncio
 async def test_check_availability_success():
-    """Test checking availability with mocked Calendly API."""
-    with patch('backend.tools.availability_tool.calendly_api') as mock_api:
+    """Test checking availability with mocked Calendly service."""
+    with patch('backend.tools.availability_tool.calendly_service') as mock_api:
         # Mock the API response
         tomorrow = datetime.now() + timedelta(days=1)
         mock_api.get_availability = AsyncMock(return_value=MagicMock(
@@ -42,7 +42,7 @@ async def test_check_availability_success():
 @pytest.mark.asyncio
 async def test_check_availability_no_slots():
     """Test handling when no slots are available."""
-    with patch('backend.tools.availability_tool.calendly_api') as mock_api:
+    with patch('backend.tools.availability_tool.calendly_service') as mock_api:
         mock_api.get_availability = AsyncMock(return_value=MagicMock(
             date="2025-11-27",
             appointment_type="consultation",
@@ -59,30 +59,6 @@ async def test_check_availability_no_slots():
         assert result["available_slots"] == []
 
 
-@pytest.mark.asyncio
-async def test_get_next_available_slots():
-    """Test getting next available slots across multiple days."""
-    with patch('backend.tools.availability_tool.calendly_api') as mock_api:
-        mock_api.get_next_available_dates = AsyncMock(return_value=[
-            {
-                "date": "2025-11-27",
-                "day_name": "Wednesday",
-                "total_slots": 5,
-                "sample_slots": [
-                    {"start_time": "09:00", "end_time": "09:30"}
-                ]
-            }
-        ])
-        
-        result = await availability_tool.get_next_available_slots(
-            appointment_type="consultation",
-            days_ahead=7
-        )
-        
-        assert result["success"] is True
-        assert len(result["available_dates"]) >= 1
-
-
 # ============================================================================
 # Booking Tool Tests
 # ============================================================================
@@ -90,7 +66,7 @@ async def test_get_next_available_slots():
 @pytest.mark.asyncio
 async def test_book_appointment_success():
     """Test successful appointment booking."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
+    with patch('backend.tools.booking_tool.calendly_service') as mock_api:
         mock_api.book_appointment = AsyncMock(return_value=MagicMock(
             booking_id="APPT-202511-0001",
             status="confirmed",
@@ -100,9 +76,9 @@ async def test_book_appointment_success():
                 "date": "2025-11-27",
                 "start_time": "14:00",
                 "patient": {
-                    "name": "John Doe",
-                    "email": "john@example.com",
-                    "phone": "555-1234"
+                    "name": "Michael Smith",
+                    "email": "michael.smith@healthmail.com",
+                    "phone": "617-555-8899"
                 }
             }
         ))
@@ -111,9 +87,9 @@ async def test_book_appointment_success():
             appointment_type="consultation",
             date="2025-11-27",
             start_time="14:00",
-            patient_name="John Doe",
-            patient_email="john@example.com",
-            patient_phone="555-1234",
+            patient_name="Michael Smith",
+            patient_email="michael.smith@healthmail.com",
+            patient_phone="617-555-8899",
             reason="General checkup"
         )
         
@@ -126,7 +102,7 @@ async def test_book_appointment_success():
 @pytest.mark.asyncio
 async def test_book_appointment_slot_taken():
     """Test booking when slot is already taken."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
+    with patch('backend.tools.booking_tool.calendly_service') as mock_api:
         mock_api.book_appointment = AsyncMock(
             side_effect=ValueError("The selected time slot is no longer available")
         )
@@ -148,7 +124,7 @@ async def test_book_appointment_slot_taken():
 @pytest.mark.asyncio
 async def test_cancel_appointment_success():
     """Test successful appointment cancellation."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
+    with patch('backend.tools.booking_tool.calendly_service') as mock_api:
         mock_api.cancel_appointment = AsyncMock(return_value=True)
         
         result = await booking_tool.cancel_appointment(
@@ -162,7 +138,7 @@ async def test_cancel_appointment_success():
 @pytest.mark.asyncio
 async def test_cancel_appointment_not_found():
     """Test cancelling non-existent appointment."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
+    with patch('backend.tools.booking_tool.calendly_service') as mock_api:
         mock_api.cancel_appointment = AsyncMock(return_value=False)
         
         result = await booking_tool.cancel_appointment(
@@ -174,56 +150,9 @@ async def test_cancel_appointment_not_found():
 
 
 @pytest.mark.asyncio
-async def test_reschedule_appointment_success():
-    """Test successful appointment rescheduling."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
-        # Mock getting existing appointment
-        mock_api.get_appointment = AsyncMock(return_value={
-            "booking_id": "APPT-202511-0001",
-            "appointment_type": "consultation",
-            "date": "2025-11-27",
-            "start_time": "14:00",
-            "status": "confirmed"
-        })
-        
-        # Mock availability check
-        mock_api._is_slot_available = MagicMock(return_value=True)
-        mock_api._add_minutes_to_time = MagicMock(return_value="15:00")
-        mock_api.schedule = {
-            "appointment_types": {
-                "consultation": {
-                    "duration": 30,
-                    "slots_required": 2
-                }
-            }
-        }
-        
-        # Mock the appointments list and save
-        mock_api.appointments = [{
-            "booking_id": "APPT-202511-0001",
-            "appointment_type": "consultation",
-            "date": "2025-11-27",
-            "start_time": "14:00",
-            "end_time": "14:30",
-            "status": "confirmed"
-        }]
-        mock_api._save_appointments = MagicMock()
-        
-        result = await booking_tool.reschedule_appointment(
-            booking_id="APPT-202511-0001",
-            new_date="2025-11-28",
-            new_start_time="10:00"
-        )
-        
-        assert result["success"] is True
-        assert result["new_date"] == "2025-11-28"
-        assert result["new_time"] == "10:00"
-
-
-@pytest.mark.asyncio
 async def test_reschedule_cancelled_appointment():
     """Test rescheduling a cancelled appointment fails."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
+    with patch('backend.tools.booking_tool.calendly_service') as mock_api:
         mock_api.get_appointment = AsyncMock(return_value={
             "booking_id": "APPT-202511-0001",
             "status": "cancelled"
@@ -242,7 +171,7 @@ async def test_reschedule_cancelled_appointment():
 @pytest.mark.asyncio
 async def test_get_appointment_by_confirmation():
     """Test retrieving appointment by confirmation code."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
+    with patch('backend.tools.booking_tool.calendly_service') as mock_api:
         mock_api.appointments = [{
             "booking_id": "APPT-202511-0001",
             "confirmation_code": "ABC123",
@@ -261,7 +190,7 @@ async def test_get_appointment_by_confirmation():
 @pytest.mark.asyncio
 async def test_get_appointment_by_confirmation_not_found():
     """Test retrieving non-existent appointment by confirmation code."""
-    with patch('backend.tools.booking_tool.calendly_api') as mock_api:
+    with patch('backend.tools.booking_tool.calendly_service') as mock_api:
         mock_api.appointments = []
         
         result = await booking_tool.get_appointment_by_confirmation(

@@ -1,6 +1,7 @@
 """
-Calendly API integration.
-Now uses real Calendly API with mock fallback via CalendlyService.
+Mock Calendly API integration.
+Uses pure mock implementation via CalendlyService (no external API).
+This file is kept for backwards compatibility but delegates to calendly_service.py.
 """
 import json
 import os
@@ -16,20 +17,21 @@ from backend.models.schemas import (
     BookingRequest, BookingResponse, AppointmentDetails
 )
 
-# Import the new unified service
-from backend.api.calendly_service import calendly_service, CalendlyMode
+# Import the mock service
+from backend.api.calendly_service import calendly_service
 
 logger = logging.getLogger(__name__)
 
 
 class CalendlyAPI:
     """
-    Calendly API wrapper.
+    Mock Calendly API wrapper.
     
-    This class now delegates to the unified CalendlyService which handles:
-    - Real Calendly API integration when configured
-    - Mock fallback when API is unavailable or not configured
-    - Local appointment storage for consistency
+    This class delegates to CalendlyService which provides:
+    - Pure mock implementation (no external API)
+    - Local JSON storage for appointments
+    - Schedule configuration via JSON
+    - Full booking/cancellation/rescheduling support
     """
     
     def __init__(self):

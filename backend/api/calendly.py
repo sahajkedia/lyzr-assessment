@@ -1,7 +1,7 @@
 """
-Calendly API router for scheduling operations.
+Mock Calendly API router for scheduling operations.
 Provides endpoints for availability, booking, rescheduling, and cancellation.
-Uses unified service with real Calendly API and fallback to mock.
+Uses mock implementation only (no real Calendly API).
 """
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any, List, Optional
@@ -19,18 +19,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/availability", response_model=AvailabilityResponse)
-async def check_availability(request: AvailabilityRequest) -> AvailabilityResponse:
+@router.get("/availability", response_model=AvailabilityResponse)
+async def check_availability(
+    date: str = Query(..., description="Date in YYYY-MM-DD format"),
+    appointment_type: str = Query(..., description="Type of appointment: consultation, followup, physical, specialist")
+) -> AvailabilityResponse:
     """
     Check available time slots for a specific date and appointment type.
     
     Args:
-        request: Availability request with date and appointment type
+        date: Date in YYYY-MM-DD format (e.g., "2024-01-15")
+        appointment_type: Type of appointment (consultation, followup, physical, specialist)
         
     Returns:
         Available time slots
+        
+    Example:
+        GET /api/calendly/availability?date=2024-01-15&appointment_type=consultation
     """
     try:
+        # Create request object from query params
+        from backend.models.schemas import AvailabilityRequest
+        request = AvailabilityRequest(date=date, appointment_type=appointment_type)
         availability = await calendly_service.get_availability(request)
         return availability
     except ValueError as e:
@@ -230,10 +240,15 @@ async def cancel_appointment(
             )
         
         if appointment["status"] == "cancelled":
-            raise HTTPException(
-                status_code=400,
-                detail="Appointment is already cancelled"
-            )
+            # Return success with a message indicating it was already cancelled
+            return {
+                "success": True,
+                "message": "Appointment was already cancelled",
+                "booking_id": booking_id,
+                "cancelled_at": appointment.get("cancelled_at"),
+                "appointment": appointment,
+                "already_cancelled": True
+            }
         
         # Cancel the appointment via service (handles both real and mock)
         success = await calendly_service.cancel_appointment(booking_id, reason)
@@ -314,10 +329,10 @@ async def get_appointment_types() -> Dict[str, Any]:
 async def get_calendly_status() -> Dict[str, Any]:
     """
     Get Calendly service status.
-    Shows whether using real API or mock, and configuration details.
+    Shows mock service configuration and statistics.
     
     Returns:
-        Service status information
+        Service status information (always mock mode)
     """
     try:
         await calendly_service.initialize()
@@ -325,29 +340,10 @@ async def get_calendly_status() -> Dict[str, Any]:
         return {
             "success": True,
             "status": status,
-            "message": f"Operating in {status['mode'].upper()} mode"
+            "message": "Mock Calendly service active"
         }
     except Exception as e:
         logger.error(f"Get status failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/status")
-async def get_calendly_status() -> Dict[str, Any]:
-    """
-    Get the current Calendly integration status.
-    
-    Returns:
-        Status information including mode (real/mock/fallback)
-    """
-    try:
-        status = calendly_service.get_status()
-        return {
-            "success": True,
-            "status": status,
-            "message": f"Calendly service running in {status['mode'].upper()} mode"
-        }
-    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 

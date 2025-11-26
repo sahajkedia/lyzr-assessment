@@ -3,9 +3,13 @@ Main scheduling agent with LLM integration and tool calling.
 """
 import os
 import json
+import re
+import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import asyncio
+
+logger = logging.getLogger(__name__)
 
 from backend.agent.prompts import SYSTEM_PROMPT, FAQ_CONTEXT_PROMPT
 from backend.tools.availability_tool import (
@@ -107,7 +111,7 @@ class SchedulingAgent:
             
             return result
         except Exception as e:
-            print(f"Error calling OpenAI: {e}")
+            logger.error(f"Error calling OpenAI: {e}")
             raise
     
     async def _call_anthropic(
@@ -157,7 +161,7 @@ class SchedulingAgent:
             
             return result
         except Exception as e:
-            print(f"Error calling Anthropic: {e}")
+            logger.error(f"Error calling Anthropic: {e}")
             raise
     
     async def _call_llm(
@@ -191,6 +195,20 @@ class SchedulingAgent:
         messages: List[Dict[str, str]]
     ) -> List[Dict[str, str]]:
         """Execute tool calls and add results to messages."""
+        # Validate function names match OpenAI's required pattern
+        valid_name_pattern = re.compile(r'^[a-zA-Z0-9_-]+$')
+        
+        for tc in tool_calls:
+            func_name = tc.get("name", "")
+            if not valid_name_pattern.match(func_name):
+                error_msg = (
+                    f"Invalid function name received from LLM: '{func_name}' (repr: {repr(func_name)}). "
+                    f"Function names must match pattern ^[a-zA-Z0-9_-]+$. "
+                    f"Tool call data: {tc}"
+                )
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+        
         # Add assistant message with tool calls to history
         if self.llm_provider == "openai":
             # For OpenAI, we need to add the assistant message with tool calls
