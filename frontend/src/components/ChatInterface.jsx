@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { AlertCircle, RefreshCw, Trash2 } from 'lucide-react'
+import { AlertCircle, RefreshCw, Trash2, Calendar } from 'lucide-react'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
+import AppointmentManager from './AppointmentManager'
 import { chatAPI } from '../api/chatApi'
 
 function ChatInterface() {
@@ -16,6 +17,7 @@ function ChatInterface() {
   const [error, setError] = useState(null)
   const [sessionId, setSessionId] = useState(null)
   const [isHealthy, setIsHealthy] = useState(true)
+  const [showAppointmentManager, setShowAppointmentManager] = useState(false)
   const messagesEndRef = useRef(null)
 
   // Check backend health on mount
@@ -134,6 +136,13 @@ function ChatInterface() {
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowAppointmentManager(true)}
+            className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+            title="Manage appointments"
+          >
+            <Calendar className="w-5 h-5" />
+          </button>
           {!isHealthy && (
             <button
               onClick={handleRetry}
@@ -182,6 +191,13 @@ function ChatInterface() {
       <MessageInput
         onSendMessage={handleSendMessage}
         disabled={isLoading || !isHealthy}
+      />
+
+      {/* Appointment Manager Modal */}
+      <AppointmentManager
+        isOpen={showAppointmentManager}
+        onClose={() => setShowAppointmentManager(false)}
+        onSendMessage={handleSendMessage}
       />
     </div>
   )

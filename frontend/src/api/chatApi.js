@@ -47,6 +47,93 @@ class ChatAPI {
       return false;
     }
   }
+
+  // Calendly API methods
+  async getAppointmentByConfirmation(confirmationCode) {
+    try {
+      const response = await this.client.get(`/api/calendly/appointment/confirmation/${confirmationCode}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching appointment:', error);
+      throw new Error(
+        error.response?.data?.detail || 'Failed to fetch appointment details.'
+      );
+    }
+  }
+
+  async getAppointmentById(bookingId) {
+    try {
+      const response = await this.client.get(`/api/calendly/appointment/${bookingId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching appointment:', error);
+      throw new Error(
+        error.response?.data?.detail || 'Failed to fetch appointment details.'
+      );
+    }
+  }
+
+  async cancelAppointment(bookingId, reason = null) {
+    try {
+      const params = reason ? { reason } : {};
+      const response = await this.client.delete(`/api/calendly/cancel/${bookingId}`, { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error canceling appointment:', error);
+      throw new Error(
+        error.response?.data?.detail || 'Failed to cancel appointment.'
+      );
+    }
+  }
+
+  async rescheduleAppointment(bookingId, newDate, newTime) {
+    try {
+      const response = await this.client.post(`/api/calendly/reschedule/${bookingId}`, null, {
+        params: {
+          new_date: newDate,
+          new_time: newTime,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error rescheduling appointment:', error);
+      throw new Error(
+        error.response?.data?.detail || 'Failed to reschedule appointment.'
+      );
+    }
+  }
+
+  async checkAvailability(date, appointmentType) {
+    try {
+      const response = await this.client.post('/api/calendly/availability', {
+        date,
+        appointment_type: appointmentType,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      throw new Error(
+        error.response?.data?.detail || 'Failed to check availability.'
+      );
+    }
+  }
+
+  async getNextAvailableDates(appointmentType, days = 7) {
+    try {
+      const response = await this.client.get('/api/calendly/availability/next-dates', {
+        params: {
+          appointment_type: appointmentType,
+          days,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching next available dates:', error);
+      throw new Error(
+        error.response?.data?.detail || 'Failed to fetch available dates.'
+      );
+    }
+  }
 }
 
 export const chatAPI = new ChatAPI();

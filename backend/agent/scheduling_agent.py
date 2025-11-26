@@ -15,6 +15,9 @@ from backend.tools.availability_tool import (
 )
 from backend.tools.booking_tool import (
     book_appointment,
+    cancel_appointment,
+    reschedule_appointment,
+    get_appointment_by_confirmation,
     BOOKING_TOOLS
 )
 from backend.rag.faq_rag import faq_rag
@@ -55,7 +58,10 @@ class SchedulingAgent:
         self.tool_functions = {
             "check_availability": check_availability,
             "get_next_available_slots": get_next_available_slots,
-            "book_appointment": book_appointment
+            "book_appointment": book_appointment,
+            "cancel_appointment": cancel_appointment,
+            "reschedule_appointment": reschedule_appointment,
+            "get_appointment_by_confirmation": get_appointment_by_confirmation
         }
     
     def _get_system_prompt(self) -> str:

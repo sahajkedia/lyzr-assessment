@@ -24,6 +24,7 @@ else:
 
 from backend.api.chat import router as chat_router
 from backend.api.appointments import router as appointments_router
+from backend.api.calendly import router as calendly_router
 from backend.agent.scheduling_agent import initialize_agent
 
 # Initialize FastAPI app
@@ -70,6 +71,7 @@ async def root():
         "endpoints": {
             "chat": "/api/chat",
             "appointments": "/api/appointments",
+            "calendly": "/api/calendly",
             "docs": "/docs",
             "health": "/health"
         }
@@ -88,6 +90,7 @@ async def health():
 # Include routers
 app.include_router(chat_router, prefix="/api", tags=["chat"])
 app.include_router(appointments_router, prefix="/api", tags=["appointments"])
+app.include_router(calendly_router, prefix="/api/calendly", tags=["calendly"])
 
 
 if __name__ == "__main__":
