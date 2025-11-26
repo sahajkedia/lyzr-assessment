@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List
 import json
 
-from backend.api.calendly_integration import calendly_api
+from backend.api.calendly_service import calendly_service
 from backend.models.schemas import AvailabilityRequest
 
 
@@ -31,7 +31,7 @@ async def check_availability(date: str, appointment_type: str) -> Dict[str, Any]
         )
         
         # Get availability
-        availability = await calendly_api.get_availability(request)
+        availability = await calendly_service.get_availability(request)
         
         # Format response
         return {
@@ -71,7 +71,7 @@ async def get_next_available_slots(
         Dictionary with available dates and slots
     """
     try:
-        available_dates = await calendly_api.get_next_available_dates(
+        available_dates = await calendly_service.get_next_available_dates(
             appointment_type=appointment_type,
             num_days=num_days
         )
@@ -134,7 +134,7 @@ async def get_availability_for_date_range(
                 appointment_type=appointment_type
             )
             
-            availability = await calendly_api.get_availability(request)
+            availability = await calendly_service.get_availability(request)
             
             if availability.total_available > 0:
                 availability_by_date.append({

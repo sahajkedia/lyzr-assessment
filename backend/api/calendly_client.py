@@ -6,7 +6,7 @@ import os
 import httpx
 import logging
 from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class CalendlyConfig:
 
 class CalendlyAPIError(Exception):
     """Exception raised for Calendly API errors."""
-    def __init__(self, message: str, status_code: int = None, response_data: dict = None):
+    def __init__(self, message: str, status_code: Optional[int] = None, response_data: Optional[dict] = None):
         self.message = message
         self.status_code = status_code
         self.response_data = response_data
@@ -46,7 +46,7 @@ class CalendlyClient:
     - Cancel events
     """
     
-    def __init__(self, config: CalendlyConfig = None):
+    def __init__(self, config: Optional[CalendlyConfig] = None):
         """Initialize the Calendly client."""
         if config is None:
             api_key = os.getenv("CALENDLY_API_KEY", "")
@@ -94,8 +94,8 @@ class CalendlyClient:
         self,
         method: str,
         endpoint: str,
-        params: Dict = None,
-        json_data: Dict = None,
+        params: Optional[Dict] = None,
+        json_data: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """Make an API request to Calendly."""
         client = await self._get_client()
@@ -149,16 +149,18 @@ class CalendlyClient:
             return self._user_info
         
         response = await self._request("GET", "/users/me")
-        self._user_info = response.get("resource", {})
+        user_resource = response.get("resource", {})
+        self._user_info = user_resource
         
         # Cache organization and user URIs
-        if not self.config.organization_uri:
-            self.config.organization_uri = self._user_info.get("current_organization")
-        if not self.config.user_uri:
-            self.config.user_uri = self._user_info.get("uri")
+        if not self.config.organization_uri and user_resource:
+            self.config.organization_uri = user_resource.get("current_organization")
+        if not self.config.user_uri and user_resource:
+            self.config.user_uri = user_resource.get("uri")
         
-        logger.info(f"Calendly connected as: {self._user_info.get('name')}")
-        return self._user_info
+        if user_resource:
+            logger.info(f"Calendly connected as: {user_resource.get('name')}")
+        return user_resource
     
     async def verify_connection(self) -> bool:
         """Verify the API connection is working."""
@@ -188,10 +190,11 @@ class CalendlyClient:
             params["active"] = "true"
         
         response = await self._request("GET", "/event_types", params=params)
-        self._event_types = response.get("collection", [])
+        event_types = response.get("collection", [])
+        self._event_types = event_types
         
-        logger.info(f"Found {len(self._event_types)} event types")
-        return self._event_types
+        logger.info(f"Found {len(event_types)} event types")
+        return event_types
     
     async def get_event_type_by_slug(self, slug: str) -> Optional[Dict[str, Any]]:
         """Get event type by slug/name."""
@@ -215,7 +218,7 @@ class CalendlyClient:
         self,
         start_time: str,
         end_time: str,
-        event_type_uri: str = None,
+        event_type_uri: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Get user availability for a date range.
@@ -271,8 +274,8 @@ class CalendlyClient:
     
     async def list_scheduled_events(
         self,
-        min_start_time: str = None,
-        max_start_time: str = None,
+        min_start_time: Optional[str] = None,
+        max_start_time: Optional[str] = None,
         status: str = "active",
         count: int = 100,
     ) -> List[Dict[str, Any]]:
@@ -320,8 +323,8 @@ class CalendlyClient:
         start_time: str,
         invitee_email: str,
         invitee_name: str,
-        invitee_phone: str = None,
-        custom_answers: List[Dict] = None,
+        invitee_phone: Optional[str] = None,
+        custom_answers: Optional[List[Dict]] = None,
         timezone: str = "UTC",
     ) -> Dict[str, Any]:
         """
@@ -362,7 +365,7 @@ class CalendlyClient:
     async def cancel_scheduled_event(
         self,
         event_uuid: str,
-        reason: str = None,
+        reason: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Cancel a scheduled event.

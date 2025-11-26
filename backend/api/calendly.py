@@ -1,16 +1,20 @@
 """
 Calendly API router for scheduling operations.
 Provides endpoints for availability, booking, rescheduling, and cancellation.
+Uses unified service with real Calendly API and fallback to mock.
 """
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
+import logging
 
-from backend.api.calendly_integration import calendly_api
+from backend.api.calendly_service import calendly_service
 from backend.models.schemas import (
     AvailabilityRequest, AvailabilityResponse,
     BookingRequest, BookingResponse
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -27,11 +31,12 @@ async def check_availability(request: AvailabilityRequest) -> AvailabilityRespon
         Available time slots
     """
     try:
-        availability = await calendly_api.get_availability(request)
+        availability = await calendly_service.get_availability(request)
         return availability
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.error(f"Availability check failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -51,13 +56,14 @@ async def get_next_available_dates(
         List of available dates with sample time slots
     """
     try:
-        dates = await calendly_api.get_next_available_dates(appointment_type, days)
+        dates = await calendly_service.get_next_available_dates(appointment_type, days)
         return {
             "success": True,
             "appointment_type": appointment_type,
             "available_dates": dates
         }
     except Exception as e:
+        logger.error(f"Get next dates failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -73,11 +79,12 @@ async def book_appointment(request: BookingRequest) -> BookingResponse:
         Booking confirmation with booking ID and confirmation code
     """
     try:
-        booking = await calendly_api.book_appointment(request)
+        booking = await calendly_service.book_appointment(request)
         return booking
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.error(f"Booking failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -93,7 +100,7 @@ async def get_appointment(booking_id: str) -> Dict[str, Any]:
         Appointment details
     """
     try:
-        appointment = await calendly_api.get_appointment(booking_id)
+        appointment = await calendly_service.get_appointment(booking_id)
         
         if not appointment:
             raise HTTPException(
@@ -108,6 +115,7 @@ async def get_appointment(booking_id: str) -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Get appointment failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -130,7 +138,7 @@ async def reschedule_appointment(
     """
     try:
         # Get existing appointment
-        appointment = await calendly_api.get_appointment(booking_id)
+        appointment = await calendly_service.get_appointment(booking_id)
         
         if not appointment:
             raise HTTPException(
@@ -146,21 +154,21 @@ async def reschedule_appointment(
         
         # Get appointment type details
         appt_type = appointment["appointment_type"]
-        appt_details = calendly_api.schedule["appointment_types"][appt_type]
+        appt_details = calendly_service.schedule["appointment_types"][appt_type]
         duration = appt_details["duration"]
         slots_required = appt_details["slots_required"]
         
         # Check if new slot is available
-        if not calendly_api._is_slot_available(new_date, new_time, slots_required):
+        if not calendly_service._is_slot_available(new_date, new_time, slots_required):
             raise HTTPException(
                 status_code=400,
                 detail="The selected time slot is not available"
             )
         
         # Update appointment
-        new_end_time = calendly_api._add_minutes_to_time(new_time, duration)
+        new_end_time = calendly_service._add_minutes_to_time(new_time, duration)
         
-        for appt in calendly_api.appointments:
+        for appt in calendly_service.appointments:
             if appt["booking_id"] == booking_id:
                 # Store old details for response
                 old_date = appt["date"]
@@ -174,7 +182,7 @@ async def reschedule_appointment(
                 appt["previous_date"] = old_date
                 appt["previous_time"] = old_time
                 
-                calendly_api._save_appointments()
+                calendly_service._save_appointments()
                 
                 return {
                     "success": True,
@@ -192,6 +200,7 @@ async def reschedule_appointment(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Reschedule failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -212,7 +221,7 @@ async def cancel_appointment(
     """
     try:
         # Get existing appointment
-        appointment = await calendly_api.get_appointment(booking_id)
+        appointment = await calendly_service.get_appointment(booking_id)
         
         if not appointment:
             raise HTTPException(
@@ -226,29 +235,26 @@ async def cancel_appointment(
                 detail="Appointment is already cancelled"
             )
         
-        # Cancel the appointment
-        for appt in calendly_api.appointments:
-            if appt["booking_id"] == booking_id:
-                appt["status"] = "cancelled"
-                appt["cancelled_at"] = datetime.now().isoformat()
-                if reason:
-                    appt["cancellation_reason"] = reason
-                
-                calendly_api._save_appointments()
-                
-                return {
-                    "success": True,
-                    "message": "Appointment cancelled successfully",
-                    "booking_id": booking_id,
-                    "cancelled_at": appt["cancelled_at"],
-                    "appointment": appt
-                }
+        # Cancel the appointment via service (handles both real and mock)
+        success = await calendly_service.cancel_appointment(booking_id, reason)
+        
+        if success:
+            # Get updated appointment
+            updated_appt = await calendly_service.get_appointment(booking_id)
+            return {
+                "success": True,
+                "message": "Appointment cancelled successfully",
+                "booking_id": booking_id,
+                "cancelled_at": updated_appt.get("cancelled_at"),
+                "appointment": updated_appt
+            }
         
         raise HTTPException(status_code=404, detail="Appointment not found")
         
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Cancellation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -264,7 +270,7 @@ async def get_appointment_by_confirmation(confirmation_code: str) -> Dict[str, A
         Appointment details
     """
     try:
-        appointments = calendly_api.appointments
+        appointments = calendly_service.appointments
         
         for appt in appointments:
             if appt["confirmation_code"] == confirmation_code.upper():
@@ -281,6 +287,7 @@ async def get_appointment_by_confirmation(confirmation_code: str) -> Dict[str, A
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Get by confirmation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -293,12 +300,35 @@ async def get_appointment_types() -> Dict[str, Any]:
         List of appointment types with durations and descriptions
     """
     try:
-        types = calendly_api.schedule["appointment_types"]
+        types = calendly_service.schedule["appointment_types"]
         return {
             "success": True,
             "appointment_types": types
         }
     except Exception as e:
+        logger.error(f"Get appointment types failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/status")
+async def get_calendly_status() -> Dict[str, Any]:
+    """
+    Get Calendly service status.
+    Shows whether using real API or mock, and configuration details.
+    
+    Returns:
+        Service status information
+    """
+    try:
+        await calendly_service.initialize()
+        status = calendly_service.get_status()
+        return {
+            "success": True,
+            "status": status,
+            "message": f"Operating in {status['mode'].upper()} mode"
+        }
+    except Exception as e:
+        logger.error(f"Get status failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -311,7 +341,7 @@ async def get_calendly_status() -> Dict[str, Any]:
         Status information including mode (real/mock/fallback)
     """
     try:
-        status = calendly_api.get_status()
+        status = calendly_service.get_status()
         return {
             "success": True,
             "status": status,

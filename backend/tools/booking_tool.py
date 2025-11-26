@@ -4,7 +4,7 @@ Tool for booking appointments.
 from typing import Dict, Any
 from datetime import datetime
 
-from backend.api.calendly_integration import calendly_api
+from backend.api.calendly_service import calendly_service
 from backend.models.schemas import BookingRequest, PatientInfo
 
 
@@ -50,7 +50,7 @@ async def book_appointment(
         )
         
         # Book appointment
-        booking = await calendly_api.book_appointment(request)
+        booking = await calendly_service.book_appointment(request)
         
         return {
             "success": True,
@@ -77,7 +77,7 @@ async def cancel_appointment(booking_id: str) -> Dict[str, Any]:
         Dictionary with cancellation status
     """
     try:
-        success = await calendly_api.cancel_appointment(booking_id)
+        success = await calendly_service.cancel_appointment(booking_id)
         
         if success:
             return {
@@ -108,7 +108,7 @@ async def get_appointment_details(booking_id: str) -> Dict[str, Any]:
         Dictionary with appointment details
     """
     try:
-        appointment = await calendly_api.get_appointment(booking_id)
+        appointment = await calendly_service.get_appointment(booking_id)
         
         if appointment:
             return {
@@ -145,7 +145,7 @@ async def reschedule_appointment(
     """
     try:
         # Get existing appointment
-        appointment = await calendly_api.get_appointment(booking_id)
+        appointment = await calendly_service.get_appointment(booking_id)
         
         if not appointment:
             return {
@@ -161,21 +161,21 @@ async def reschedule_appointment(
         
         # Get appointment type details
         appt_type = appointment["appointment_type"]
-        appt_details = calendly_api.schedule["appointment_types"][appt_type]
+        appt_details = calendly_service.schedule["appointment_types"][appt_type]
         duration = appt_details["duration"]
         slots_required = appt_details["slots_required"]
         
         # Check if new slot is available
-        if not calendly_api._is_slot_available(new_date, new_start_time, slots_required):
+        if not calendly_service._is_slot_available(new_date, new_start_time, slots_required):
             return {
                 "success": False,
                 "error": "The selected time slot is not available"
             }
         
         # Update appointment
-        new_end_time = calendly_api._add_minutes_to_time(new_start_time, duration)
+        new_end_time = calendly_service._add_minutes_to_time(new_start_time, duration)
         
-        for appt in calendly_api.appointments:
+        for appt in calendly_service.appointments:
             if appt["booking_id"] == booking_id:
                 # Store old details
                 old_date = appt["date"]
@@ -189,7 +189,7 @@ async def reschedule_appointment(
                 appt["previous_date"] = old_date
                 appt["previous_time"] = old_time
                 
-                calendly_api._save_appointments()
+                calendly_service._save_appointments()
                 
                 return {
                     "success": True,
@@ -225,7 +225,7 @@ async def get_appointment_by_confirmation(confirmation_code: str) -> Dict[str, A
         Dictionary with appointment details
     """
     try:
-        for appt in calendly_api.appointments:
+        for appt in calendly_service.appointments:
             if appt["confirmation_code"] == confirmation_code.upper():
                 return {
                     "success": True,

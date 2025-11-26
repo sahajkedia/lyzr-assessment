@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
-from backend.api.calendly_integration import calendly_api
+from backend.api.calendly_service import calendly_service
 
 router = APIRouter()
 
@@ -30,7 +30,7 @@ async def list_appointments(
         Dictionary with appointments list and count
     """
     try:
-        appointments = calendly_api.appointments.copy()
+        appointments = calendly_service.appointments.copy()
         
         # Apply filters
         if date:
@@ -69,7 +69,7 @@ async def get_appointment(booking_id: str) -> Dict[str, Any]:
         Appointment details
     """
     try:
-        appointment = await calendly_api.get_appointment(booking_id)
+        appointment = await calendly_service.get_appointment(booking_id)
         
         if not appointment:
             raise HTTPException(
@@ -100,7 +100,7 @@ async def get_appointment_by_confirmation(confirmation_code: str) -> Dict[str, A
         Appointment details
     """
     try:
-        appointments = calendly_api.appointments
+        appointments = calendly_service.appointments
         
         for appt in appointments:
             if appt["confirmation_code"] == confirmation_code.upper():
@@ -132,7 +132,7 @@ async def cancel_appointment(booking_id: str) -> Dict[str, Any]:
         Cancellation confirmation
     """
     try:
-        success = await calendly_api.cancel_appointment(booking_id)
+        success = await calendly_service.cancel_appointment(booking_id)
         
         if not success:
             raise HTTPException(
@@ -161,7 +161,7 @@ async def get_appointments_summary() -> Dict[str, Any]:
         Summary with counts by status, type, and upcoming appointments
     """
     try:
-        appointments = calendly_api.appointments
+        appointments = calendly_service.appointments
         
         # Count by status
         status_counts = {}

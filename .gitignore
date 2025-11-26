@@ -26,6 +26,8 @@ dist/
 
 # Data
 data/vectordb/
+data/doctor_schedule.json
+
 *.db
 
 # Logs
