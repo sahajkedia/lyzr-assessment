@@ -23,6 +23,7 @@ else:
         load_dotenv(env_example_path)
 
 from backend.api.chat import router as chat_router
+from backend.api.appointments import router as appointments_router
 from backend.agent.scheduling_agent import initialize_agent
 
 # Initialize FastAPI app
@@ -68,6 +69,7 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "chat": "/api/chat",
+            "appointments": "/api/appointments",
             "docs": "/docs",
             "health": "/health"
         }
@@ -85,6 +87,7 @@ async def health():
 
 # Include routers
 app.include_router(chat_router, prefix="/api", tags=["chat"])
+app.include_router(appointments_router, prefix="/api", tags=["appointments"])
 
 
 if __name__ == "__main__":

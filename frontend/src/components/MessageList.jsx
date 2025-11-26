@@ -1,4 +1,4 @@
-import { Bot, User } from 'lucide-react'
+import { User } from 'lucide-react'
 
 function MessageList({ messages, isLoading, messagesEndRef }) {
   const formatTime = (date) => {
@@ -6,6 +6,21 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
+    })
+  }
+
+  // Function to render text with markdown formatting
+  const renderFormattedText = (text) => {
+    // Split by ** to find bold sections
+    const parts = text.split(/(\*\*.*?\*\*)/g)
+    
+    return parts.map((part, index) => {
+      // Check if this part is wrapped in **
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const boldText = part.slice(2, -2)
+        return <strong key={index} className="font-semibold">{boldText}</strong>
+      }
+      return <span key={index}>{part}</span>
     })
   }
 
@@ -25,18 +40,22 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
                 ? 'bg-primary-600'
                 : message.isError
                 ? 'bg-red-100'
-                : 'bg-medical-100'
+                : 'bg-gradient-to-br from-purple-400 to-pink-400'
             }`}
           >
             {message.role === 'user' ? (
               <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             ) : (
-              <Bot className={`w-4 h-4 sm:w-5 sm:h-5 ${message.isError ? 'text-red-600' : 'text-medical-600'}`} />
+              <span className="text-white font-semibold text-xs sm:text-sm">M</span>
             )}
           </div>
 
           {/* Message Content */}
           <div className={`flex-1 max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
+            {/* Agent Name Label */}
+            {message.role === 'assistant' && (
+              <p className="text-xs font-medium text-gray-500 mb-1 px-2">Meera</p>
+            )}
             <div
               className={`message-bubble ${
                 message.role === 'user'
@@ -46,9 +65,9 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
                   : 'agent-message'
               }`}
             >
-              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
-                {message.content}
-              </p>
+              <div className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+                {renderFormattedText(message.content)}
+              </div>
               
               {/* Metadata (for tool usage info) */}
               {message.metadata?.used_tools && (
@@ -71,14 +90,17 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
       {/* Typing Indicator */}
       {isLoading && (
         <div className="flex items-start space-x-2 sm:space-x-3 animate-slide-in">
-          <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-medical-100 flex items-center justify-center">
-            <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-medical-600" />
+          <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+            <span className="text-white font-semibold text-xs sm:text-sm">M</span>
           </div>
-          <div className="message-bubble agent-message">
-            <div className="typing-indicator flex space-x-1">
-              <span style={{ '--delay': 0 }}></span>
-              <span style={{ '--delay': 1 }}></span>
-              <span style={{ '--delay': 2 }}></span>
+          <div className="flex flex-col">
+            <p className="text-xs font-medium text-gray-500 mb-1 px-2">Meera</p>
+            <div className="message-bubble agent-message">
+              <div className="typing-indicator flex space-x-1">
+                <span style={{ '--delay': 0 }}></span>
+                <span style={{ '--delay': 1 }}></span>
+                <span style={{ '--delay': 2 }}></span>
+              </div>
             </div>
           </div>
         </div>

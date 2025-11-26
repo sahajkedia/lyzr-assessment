@@ -8,7 +8,7 @@ function ChatInterface() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I\'m your HealthCare Plus virtual assistant. I\'m here to help you schedule appointments and answer any questions you might have about our clinic. What brings you in today?',
+      content: 'Hello! I\'m Meera, your HealthCare Plus virtual assistant. I\'m here to help you schedule appointments and answer any questions you might have about our clinic. What brings you in today?',
       timestamp: new Date(),
     }
   ])
@@ -102,7 +102,7 @@ function ChatInterface() {
     setMessages([
       {
         role: 'assistant',
-        content: 'Hello! I\'m your HealthCare Plus virtual assistant. I\'m here to help you schedule appointments and answer any questions you might have about our clinic. What brings you in today?',
+        content: 'Hello! I\'m Meera, your HealthCare Plus virtual assistant. I\'m here to help you schedule appointments and answer any questions you might have about our clinic. What brings you in today?',
         timestamp: new Date(),
       }
     ])
@@ -118,21 +118,26 @@ function ChatInterface() {
   return (
     <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-12rem)] sm:h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)] min-h-[500px] max-h-[900px] animate-slide-up">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
-        <div>
-          <h3 className="text-white font-semibold text-lg">AI Assistant</h3>
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
-            <p className="text-primary-100 text-sm">
-              {isHealthy ? 'Online' : 'Offline'}
-            </p>
+      <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <span className="text-white font-bold text-lg">M</span>
+          </div>
+          <div>
+            <h3 className="text-white font-semibold text-lg">Meera</h3>
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
+              <p className="text-white/80 text-sm">
+                {isHealthy ? 'Online' : 'Offline'}
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           {!isHealthy && (
             <button
               onClick={handleRetry}
-              className="text-white hover:bg-primary-500 p-2 rounded-lg transition-colors"
+              className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
               title="Retry connection"
             >
               <RefreshCw className="w-5 h-5" />
@@ -140,7 +145,7 @@ function ChatInterface() {
           )}
           <button
             onClick={handleClearChat}
-            className="text-white hover:bg-primary-500 p-2 rounded-lg transition-colors"
+            className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
             title="Clear conversation"
           >
             <Trash2 className="w-5 h-5" />
