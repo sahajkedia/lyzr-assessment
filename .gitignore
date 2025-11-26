@@ -16,6 +16,7 @@ dist/
 
 # Environment
 .env
+!.env.example
 
 # IDEs
 .vscode/
@@ -37,4 +38,4 @@ assessment_requirements.txt
 
 CONFIRMATION_COMPONENT_GUIDE.md
 confirmation_summary.md
-.gitignore
+VISUAL_DEMO.md

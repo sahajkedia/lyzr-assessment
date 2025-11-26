@@ -47,19 +47,40 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup."""
-    print("Initializing Medical Appointment Scheduling Agent...")
+    print("\n" + "="*60)
+    print("🏥 Medical Appointment Scheduling Agent")
+    print("="*60)
     
     # Initialize the agent
     llm_provider = os.getenv("LLM_PROVIDER", "openai")
     llm_model = os.getenv("LLM_MODEL", "gpt-4-turbo")
     
-    print(f"LLM Provider: {llm_provider}")
-    print(f"LLM Model: {llm_model}")
+    print(f"\n📝 LLM Configuration:")
+    print(f"   Provider: {llm_provider}")
+    print(f"   Model: {llm_model}")
     
     initialize_agent(llm_provider=llm_provider, model=llm_model)
+    print("   ✅ Agent initialized")
     
-    print("Agent initialized successfully!")
-    print(f"Server running on port {os.getenv('BACKEND_PORT', 8000)}")
+    # Initialize Calendly service
+    print(f"\n📅 Calendly Configuration:")
+    from backend.api.calendly_service import calendly_service
+    mode = await calendly_service.initialize()
+    status = calendly_service.get_status()
+    
+    if mode.value == "real":
+        print(f"   ✅ Connected to Calendly API (REAL mode)")
+        print(f"   📋 Event types mapped: {status['event_types_mapped']}")
+    elif mode.value == "fallback":
+        print(f"   ⚠️  Calendly API failed - using FALLBACK mode")
+        print(f"   📋 Local appointments: {status['local_appointments']}")
+    else:
+        print(f"   📋 Using MOCK mode (no API key configured)")
+        print(f"   💡 Set CALENDLY_API_KEY in .env to use real Calendly")
+    
+    port = os.getenv('BACKEND_PORT', 8000)
+    print(f"\n🚀 Server running on port {port}")
+    print("="*60 + "\n")
 
 
 @app.get("/")
@@ -81,9 +102,19 @@ async def root():
 @app.get("/health")
 async def health():
     """Health check endpoint."""
+    from backend.api.calendly_service import calendly_service
+    
+    calendly_status = calendly_service.get_status()
+    
     return {
         "status": "healthy",
-        "service": "appointment-scheduling-agent"
+        "service": "appointment-scheduling-agent",
+        "calendly": {
+            "mode": calendly_status["mode"],
+            "connected": calendly_status["mode"] == "real",
+            "event_types_mapped": calendly_status["event_types_mapped"],
+            "local_appointments": calendly_status["local_appointments"],
+        }
     }
 
 

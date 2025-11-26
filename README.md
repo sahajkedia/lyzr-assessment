@@ -575,21 +575,42 @@ LLM_MODEL=claude-3-sonnet-20240229
 
 ### Calendly Integration
 
-**Mock Implementation** (for assessment):
+The system now supports **real Calendly API integration** with automatic fallback to mock:
 
-- Simulates real Calendly API
-- Persistent storage in JSON
-- Realistic slot calculation
-- Proper conflict detection
+**Operating Modes:**
+| Mode | Description |
+|------|-------------|
+| `REAL` | Connected to Calendly API - all bookings sync with your Calendly account |
+| `MOCK` | No API key configured - uses local mock implementation |
+| `FALLBACK` | API failed - automatically falls back to mock for uninterrupted service |
 
-**Real API Integration** (production-ready):
-Uncomment in `.env`:
+**Setup Real Calendly:**
+
+1. Get your Personal Access Token from [Calendly Integrations](https://calendly.com/integrations/api_webhooks)
+2. Add to your `.env`:
 
 ```env
-USE_MOCK_CALENDLY=false
-CALENDLY_API_KEY=your_key
-CALENDLY_USER_URL=https://calendly.com/your-username
+CALENDLY_API_KEY=your_personal_access_token_here
 ```
+
+3. The system will automatically:
+   - Connect to Calendly API on startup
+   - Map your event types (Consultation, Follow-up, Physical, Specialist)
+   - Sync appointments to your Calendly calendar
+   - Fall back to mock if API is unavailable
+
+**Check Status:**
+```bash
+curl http://localhost:8000/api/calendly/status
+# Returns: { "mode": "real", "event_types_mapped": 4, ... }
+```
+
+**Features with Real Calendly:**
+- ✅ Real-time availability from your Calendly calendar
+- ✅ Bookings appear in your Calendly dashboard
+- ✅ Automatic event type mapping
+- ✅ Cancellation syncs to Calendly
+- ✅ Local backup of all appointments
 
 ### Session Management
 
@@ -725,9 +746,8 @@ This project is created for the Lyzr AI Assessment.
 
 ---
 
-**Note**: This is a mock implementation for assessment purposes. For production use, implement:
+**Note**: This project now includes **real Calendly API integration** with mock fallback. For full production use, also implement:
 
-- Real Calendly API integration
 - Proper database (PostgreSQL)
 - Redis for session management
 - Authentication & authorization
@@ -736,6 +756,7 @@ This project is created for the Lyzr AI Assessment.
 - Monitoring & logging
 - CI/CD pipeline
 - Comprehensive test coverage
+- Webhooks for real-time Calendly sync
 
 ## Development Process
 

@@ -302,3 +302,22 @@ async def get_appointment_types() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/status")
+async def get_calendly_status() -> Dict[str, Any]:
+    """
+    Get the current Calendly integration status.
+    
+    Returns:
+        Status information including mode (real/mock/fallback)
+    """
+    try:
+        status = calendly_api.get_status()
+        return {
+            "success": True,
+            "status": status,
+            "message": f"Calendly service running in {status['mode'].upper()} mode"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
