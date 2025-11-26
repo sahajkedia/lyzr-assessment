@@ -2,7 +2,7 @@ import { User, Calendar, CheckCircle, XCircle, Edit } from "lucide-react";
 import { useState } from "react";
 import AppointmentConfirmation from "./AppointmentConfirmation";
 
-function MessageList({ messages, isLoading, messagesEndRef }) {
+function MessageList({ messages, isLoading, messagesEndRef, onSendMessage }) {
 	const [expandedConfirmation, setExpandedConfirmation] = useState(null);
 
 	const formatTime = (date) => {
@@ -31,6 +31,95 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
 		];
 		const lowerContent = content.toLowerCase();
 		return processingPhrases.some((phrase) => lowerContent.includes(phrase));
+	};
+
+	// Detect if message is asking about appointment type
+	const detectQuickReplies = (content) => {
+		const lowerContent = content.toLowerCase();
+
+		// Check for appointment slot listings
+		// Pattern: "• Day, Month Date at Time"
+		const slotPattern =
+			/•\s*([A-Za-z]+,\s*[A-Za-z]+\s+\d+\s+at\s+\d+:\d+\s*(?:AM|PM))/gi;
+		const slots = content.match(slotPattern);
+
+		if (
+			slots &&
+			slots.length >= 2 &&
+			(lowerContent.includes("available") ||
+				lowerContent.includes("found") ||
+				lowerContent.includes("slots") ||
+				lowerContent.includes("which of these"))
+		) {
+			const options = slots.map((slot) => {
+				// Remove the bullet point and trim
+				const cleanSlot = slot.replace(/^•\s*/, "").trim();
+				return {
+					label: cleanSlot,
+					value: `I'd like to book the ${cleanSlot} slot`,
+				};
+			});
+
+			return {
+				type: "time_slots",
+				options: options,
+			};
+		}
+
+		// Check for appointment type question
+		if (
+			(lowerContent.includes("purpose of your visit") ||
+				lowerContent.includes("type of appointment") ||
+				lowerContent.includes("kind of appointment")) &&
+			(lowerContent.includes("general consultation") ||
+				lowerContent.includes("follow-up") ||
+				lowerContent.includes("physical exam") ||
+				lowerContent.includes("specialist"))
+		) {
+			return {
+				type: "appointment_type",
+				options: [
+					{
+						label: "General Consultation",
+						value: "I need a general consultation",
+					},
+					{ label: "Follow-up Visit", value: "I need a follow-up appointment" },
+					{ label: "Physical Exam", value: "I need a physical exam" },
+					{
+						label: "Specialist Consultation",
+						value: "I need a specialist consultation",
+					},
+				],
+			};
+		}
+
+		// Check for time preference question
+		if (
+			(lowerContent.includes("prefer morning") ||
+				(lowerContent.includes("morning") &&
+					lowerContent.includes("afternoon") &&
+					lowerContent.includes("evening"))) &&
+			(lowerContent.includes("9 am") ||
+				lowerContent.includes("12 pm") ||
+				lowerContent.includes("5 pm"))
+		) {
+			return {
+				type: "time_preference",
+				options: [
+					{ label: "🌅 Morning (9 AM - 12 PM)", value: "Morning, please" },
+					{
+						label: "☀️ Afternoon (12 PM - 5 PM)",
+						value: "Afternoon would be great",
+					},
+					{
+						label: "🌆 Evening (5 PM - 7 PM)",
+						value: "Evening works best for me",
+					},
+				],
+			};
+		}
+
+		return null;
 	};
 
 	// Function to render text with markdown formatting
@@ -163,6 +252,12 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
 					isProcessingMessage(message.content) &&
 					isLoading &&
 					index === messages.length - 1;
+				const quickReplies =
+					message.role === "assistant" &&
+					index === messages.length - 1 &&
+					!isLoading
+						? detectQuickReplies(message.content)
+						: null;
 
 				return (
 					<div key={index}>
@@ -244,6 +339,65 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
 										</div>
 									)}
 								</div>
+
+								{/* Quick Reply Buttons */}
+								{quickReplies && (
+									<div className="mt-3 space-y-2">
+										<p className="text-xs text-gray-500 px-2">
+											{quickReplies.type === "time_slots"
+												? "Select a time:"
+												: "Quick replies:"}
+										</p>
+										<div
+											className={
+												quickReplies.type === "time_slots"
+													? "grid grid-cols-1 sm:grid-cols-2 gap-2"
+													: "flex flex-wrap gap-2"
+											}>
+											{quickReplies.options.map((option, optionIndex) => (
+												<button
+													key={optionIndex}
+													onClick={() =>
+														onSendMessage && onSendMessage(option.value)
+													}
+													className={
+														quickReplies.type === "time_slots"
+															? "bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 border-2 border-purple-300 hover:border-purple-500 text-gray-800 hover:text-purple-700 px-4 py-3 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md text-sm font-medium text-left flex items-center justify-between group"
+															: "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2.5 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm font-medium"
+													}>
+													<span>{option.label}</span>
+													{quickReplies.type === "time_slots" && (
+														<svg
+															className="w-4 h-4 text-purple-400 group-hover:text-purple-600 transition-colors"
+															fill="none"
+															viewBox="0 0 24 24"
+															stroke="currentColor">
+															<path
+																strokeLinecap="round"
+																strokeLinejoin="round"
+																strokeWidth={2}
+																d="M9 5l7 7-7 7"
+															/>
+														</svg>
+													)}
+												</button>
+											))}
+										</div>
+										{/* "None of these work" option for time slots */}
+										{quickReplies.type === "time_slots" && (
+											<button
+												onClick={() =>
+													onSendMessage &&
+													onSendMessage(
+														"None of these times work for me. Can you show me other dates?"
+													)
+												}
+												className="w-full bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium mt-2">
+												📅 Show me other dates
+											</button>
+										)}
+									</div>
+								)}
 
 								{/* Timestamp */}
 								<p className="text-xs text-gray-400 mt-1 px-2">

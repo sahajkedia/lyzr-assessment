@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "booking_id": "APPT-202511-0001",
+    "appointment_type": "consultation",
+    "date": "2025-11-28",
+    "start_time": "17:30",
+    "end_time": "18:00",
+    "patient": {
+      "name": "Sahaj Kedia",
+      "email": "sahaj@123.com",
+      "phone": "9108237484"
+    },
+    "reason": "General Consultation",
+    "confirmation_code": "2QGNND",
+    "status": "cancelled",
+    "source": "mock",
+    "created_at": "2025-11-26T16:35:29.965874",
+    "cancelled_at": "2025-11-26T16:35:57.008272"
+  }
+]

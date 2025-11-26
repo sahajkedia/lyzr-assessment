@@ -185,6 +185,7 @@ function ChatInterface() {
         messages={messages}
         isLoading={isLoading}
         messagesEndRef={messagesEndRef}
+        onSendMessage={handleSendMessage}
       />
 
       {/* Input */}
