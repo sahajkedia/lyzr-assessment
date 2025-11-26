@@ -10,7 +10,7 @@
 
 @layer components {
   .message-bubble {
-    @apply rounded-2xl px-4 py-3 max-w-[80%] break-words shadow-sm;
+    @apply rounded-2xl px-3 sm:px-4 py-2 sm:py-3 max-w-[80%] break-words shadow-sm;
   }
   
   .user-message {
@@ -28,6 +28,18 @@
   
   .scroll-smooth {
     scroll-behavior: smooth;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
   }
 }
 

@@ -116,9 +116,9 @@ function ChatInterface() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[600px] animate-slide-up">
+    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-12rem)] sm:h-[calc(100vh-10rem)] lg:h-[calc(100vh-8rem)] min-h-[500px] max-h-[900px] animate-slide-up">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
         <div>
           <h3 className="text-white font-semibold text-lg">AI Assistant</h3>
           <div className="flex items-center space-x-2">

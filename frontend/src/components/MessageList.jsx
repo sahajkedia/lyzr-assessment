@@ -10,17 +10,17 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50">
+    <div className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 bg-gray-50">
       {messages.map((message, index) => (
         <div
           key={index}
-          className={`flex items-start space-x-3 animate-slide-in ${
+          className={`flex items-start space-x-2 sm:space-x-3 animate-slide-in ${
             message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
           }`}
         >
           {/* Avatar */}
           <div
-            className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+            className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
               message.role === 'user'
                 ? 'bg-primary-600'
                 : message.isError
@@ -29,14 +29,14 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
             }`}
           >
             {message.role === 'user' ? (
-              <User className="w-5 h-5 text-white" />
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             ) : (
-              <Bot className={`w-5 h-5 ${message.isError ? 'text-red-600' : 'text-medical-600'}`} />
+              <Bot className={`w-4 h-4 sm:w-5 sm:h-5 ${message.isError ? 'text-red-600' : 'text-medical-600'}`} />
             )}
           </div>
 
           {/* Message Content */}
-          <div className={`flex-1 max-w-[75%] ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
+          <div className={`flex-1 max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
             <div
               className={`message-bubble ${
                 message.role === 'user'
@@ -46,7 +46,7 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
                   : 'agent-message'
               }`}
             >
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
                 {message.content}
               </p>
               
@@ -70,9 +70,9 @@ function MessageList({ messages, isLoading, messagesEndRef }) {
 
       {/* Typing Indicator */}
       {isLoading && (
-        <div className="flex items-start space-x-3 animate-slide-in">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-medical-100 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-medical-600" />
+        <div className="flex items-start space-x-2 sm:space-x-3 animate-slide-in">
+          <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-medical-100 flex items-center justify-center">
+            <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-medical-600" />
           </div>
           <div className="message-bubble agent-message">
             <div className="typing-indicator flex space-x-1">
