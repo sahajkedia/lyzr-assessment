@@ -51,7 +51,7 @@ This project implements a complete medical appointment scheduling system with:
 
 ```bash
 git clone <repository-url>
-cd lyzr-assessment-1
+cd appointment-scheduling-agent
 
 # Backend setup
 python3 -m venv venv
@@ -123,7 +123,7 @@ If you want to use **Real Calendly API** instead:
    CALENDLY_USER_URL=https://calendly.com/your-username
    ```
 
-The system will automatically use real Calendly if configured, otherwise falls back to mock.
+The system will automatically use real Calendly if configured, otherwise it falls back to mock.
 
 ### Running the Application
 
