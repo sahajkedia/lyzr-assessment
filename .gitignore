@@ -34,3 +34,7 @@ data/vectordb/
 .DS_Store
 Thumbs.db
 assessment_requirements.txt
+
+CONFIRMATION_COMPONENT_GUIDE.md
+confirmation_summary.md
+.gitignore
