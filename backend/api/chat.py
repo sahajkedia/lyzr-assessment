@@ -6,7 +6,7 @@ from typing import Dict, Any
 import uuid
 
 from backend.models.schemas import ChatRequest, ChatResponse, ChatMessage
-from backend.agent.scheduling_agent import agent
+from backend.agent import scheduling_agent
 
 router = APIRouter()
 
@@ -44,13 +44,16 @@ async def chat(request: ChatRequest) -> ChatResponse:
             conversation_history = [
                 ChatMessage(**msg) for msg in session["conversation_history"]
             ]
-        
         # Process message with agent
+        agent = getattr(scheduling_agent, "agent", None)
+        if agent is None:
+            raise HTTPException(status_code=500, detail="Scheduling agent is not initialized.")
+        if not hasattr(agent, "process_message") or not callable(getattr(agent, "process_message")):
+            raise HTTPException(status_code=500, detail="Scheduling agent does not support message processing.")
         result = await agent.process_message(
             user_message=request.message,
             conversation_history=conversation_history
         )
-        
         # Update conversation history
         updated_history = conversation_history + [
             ChatMessage(role="user", content=request.message),
